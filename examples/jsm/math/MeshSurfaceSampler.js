@@ -1,10 +1,7 @@
-/**
- * @author donmccurdy / https://www.donmccurdy.com/
- */
-
 import {
-	Triangle
-} from "../../../build/three.module.js";
+	Triangle,
+	Vector3
+} from '../../../build/three.module.js';
 
 /**
  * Utility class for sampling weighted random points on the surface of a mesh.
@@ -19,8 +16,11 @@ import {
 var MeshSurfaceSampler = ( function () {
 
 	var _face = new Triangle();
+	var _color = new Vector3();
 
-	function MeshSurfaceSampler ( geometry ) {
+	function MeshSurfaceSampler( mesh ) {
+
+		var geometry = mesh.geometry;
 
 		if ( ! geometry.isBufferGeometry || geometry.attributes.position.itemSize !== 3 ) {
 
@@ -37,13 +37,15 @@ var MeshSurfaceSampler = ( function () {
 		}
 
 		this.geometry = geometry;
+		this.randomFunction = Math.random;
 
 		this.positionAttribute = this.geometry.getAttribute( 'position' );
+		this.colorAttribute = this.geometry.getAttribute( 'color' );
 		this.weightAttribute = null;
 
 		this.distribution = null;
 
-	};
+	}
 
 	MeshSurfaceSampler.prototype = {
 
@@ -106,13 +108,20 @@ var MeshSurfaceSampler = ( function () {
 
 		},
 
-		sample: function ( targetPosition, targetNormal ) {
+		setRandomGenerator: function ( randomFunction ) {
+
+			this.randomFunction = randomFunction;
+			return this;
+
+		},
+
+		sample: function ( targetPosition, targetNormal, targetColor ) {
 
 			var cumulativeTotal = this.distribution[ this.distribution.length - 1 ];
 
-			var faceIndex = this.binarySearch( Math.random() * cumulativeTotal );
+			var faceIndex = this.binarySearch( this.randomFunction() * cumulativeTotal );
 
-			return this.sampleFace( faceIndex, targetPosition, targetNormal );
+			return this.sampleFace( faceIndex, targetPosition, targetNormal, targetColor );
 
 		},
 
@@ -122,13 +131,13 @@ var MeshSurfaceSampler = ( function () {
 			var start = 0;
 			var end = dist.length - 1;
 
-			var index = -1;
+			var index = - 1;
 
 			while ( start <= end ) {
 
-				var mid = Math.floor( ( start + end ) / 2 );
+				var mid = Math.ceil( ( start + end ) / 2 );
 
-				if ( dist[ mid - 1 ] <= x && dist[ mid ] > x ) {
+				if ( mid === 0 || dist[ mid - 1 ] <= x && dist[ mid ] > x ) {
 
 					index = mid;
 
@@ -150,10 +159,10 @@ var MeshSurfaceSampler = ( function () {
 
 		},
 
-		sampleFace: function ( faceIndex, targetPosition, targetNormal ) {
+		sampleFace: function ( faceIndex, targetPosition, targetNormal, targetColor ) {
 
-			var u = Math.random();
-			var v = Math.random();
+			var u = this.randomFunction();
+			var v = this.randomFunction();
 
 			if ( u + v > 1 ) {
 
@@ -172,7 +181,29 @@ var MeshSurfaceSampler = ( function () {
 				.addScaledVector( _face.b, v )
 				.addScaledVector( _face.c, 1 - ( u + v ) );
 
-			_face.getNormal( targetNormal );
+			if ( targetNormal !== undefined ) {
+
+				_face.getNormal( targetNormal );
+
+			}
+
+			if ( targetColor !== undefined && this.colorAttribute !== undefined ) {
+
+				_face.a.fromBufferAttribute( this.colorAttribute, faceIndex * 3 );
+				_face.b.fromBufferAttribute( this.colorAttribute, faceIndex * 3 + 1 );
+				_face.c.fromBufferAttribute( this.colorAttribute, faceIndex * 3 + 2 );
+
+				_color
+					.set( 0, 0, 0 )
+					.addScaledVector( _face.a, u )
+					.addScaledVector( _face.b, v )
+					.addScaledVector( _face.c, 1 - ( u + v ) );
+
+				targetColor.r = _color.x;
+				targetColor.g = _color.y;
+				targetColor.b = _color.z;
+
+			}
 
 			return this;
 
