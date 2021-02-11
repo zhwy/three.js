@@ -9098,9 +9098,6 @@
 		clone: function clone() {
 			/*
 			 // Handle primitives
-				 for ( const key in parameters ) {
-				 values.push( parameters[ key ] );
-				 }
 					 const parameters = this.parameters;
 					 if ( parameters !== undefined ) {
 					 const values = [];
