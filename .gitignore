@@ -18,10 +18,8 @@ test/*
 !test/*.*
 test/*.cmd
 test/unit/build
-build/*
+test/treeshake/index.bundle.js
 
-
-**/node_modules
 build/three.js
 build/three.min.js
 build/three.module.js
