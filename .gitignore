@@ -20,6 +20,5 @@ test/*.cmd
 test/unit/build
 test/treeshake/index.bundle.js
 
-build/three.js
-build/three.min.js
-build/three.module.js
+build/*
+node_modules/*
