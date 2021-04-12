@@ -22,3 +22,6 @@ test/treeshake/index.bundle.js
 
 build/*
 node_modules/*
+build/three.module.js
+build/three.min.js
+build/three.js
