@@ -42,6 +42,7 @@
     "webgl_geometry_text",
     "webgl_geometry_text_shapes",
     "webgl_geometry_text_stroke",
+    "webgl_geometry_tube",
     "webgl_helpers",
     "webgl_instancing_dynamic",
     "webgl_instancing_performance",

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - geometry - cube</title>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+		/>
+		<link type="text/css" rel="stylesheet" href="main.css" />
+	</head>
+	<body>
+		<script type="module">
+			import * as THREE from "../build/three.module.js";
+			import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+			import { SceneUtils } from "./jsm/utils/SceneUtils.js";
+
+			let camera, scene, renderer;
+			let mesh;
+
+			init();
+			animate();
+
+			function init() {
+				camera = new THREE.PerspectiveCamera(
+					70,
+					window.innerWidth / window.innerHeight,
+					1,
+					1000
+				);
+				camera.position.z = 400;
+
+				scene = new THREE.Scene();
+
+				scene.background = new THREE.Color(0xffffff);
+
+				// scene.add(new THREE.AmbientLight(0xffffff, 5));
+
+				const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+				scene.add(directionalLight);
+
+				const pathArr = [
+					[0, 0, 0],
+					[100, 0, 0],
+					[100, 50, 0],
+					[100, 50, -50],
+				];
+
+				const texture = new THREE.TextureLoader().load("textures/arrow.png");
+
+				mesh = createTube(pathArr, texture);
+
+				scene.add(mesh);
+
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				document.body.appendChild(renderer.domElement);
+
+				//
+				const controls = new OrbitControls(camera, renderer.domElement);
+
+				window.addEventListener("resize", onWindowResize);
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+
+				renderer.render(scene, camera);
+			}
+
+			// 动态创建一个管道
+			function createTube(pathArr, texture, radius = 10) {
+				let curveArr = [];
+				for (let i = 0; i < pathArr.length; i += 1) {
+					const arr = pathArr[i];
+					curveArr.push(new THREE.Vector3(arr[0], arr[1], arr[2]));
+				}
+				const curve = new THREE.CatmullRomCurve3(curveArr);
+
+				const tubeGeometry = new THREE.TubeGeometry(
+					curve,
+					100,
+					radius,
+					50,
+					false
+				);
+
+				const basicMaterial = new THREE.MeshBasicMaterial({
+					color: 0x556e33,
+					side: THREE.DoubleSide,
+				});
+				// 设置阵列模式 RepeatWrapping
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				// 设置x方向的重复数(沿着管道路径方向)
+				// 设置y方向的重复数(环绕管道方向)
+				texture.repeat.x = 10;
+				texture.repeat.y = 2;
+				// 设置管道纹理偏移数,便于对中
+				texture.offset.y = 0.5;
+				const tubeMaterial = new THREE.MeshPhongMaterial({
+					map: texture,
+					transparent: true,
+					color: new THREE.Color(0x00ffff),
+				});
+
+				// const tubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+				// const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+				// 多材质
+				const tube = SceneUtils.createMultiMaterialObject(tubeGeometry, [
+					tubeMaterial,
+					basicMaterial,
+				]);
+				// 使用加减法可以设置不同的运动方向
+				setInterval(() => {
+					texture.offset.x -= 0.0076;
+				});
+				return tube;
+			}
+		</script>
+	</body>
+</html>
