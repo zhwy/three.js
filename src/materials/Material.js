@@ -1,6 +1,6 @@
 import { EventDispatcher } from '../core/EventDispatcher.js';
 import { FrontSide, FlatShading, NormalBlending, LessEqualDepth, AddEquation, OneMinusSrcAlphaFactor, SrcAlphaFactor, AlwaysStencilFunc, KeepStencilOp } from '../constants.js';
-import { MathUtils } from '../math/MathUtils.js';
+import * as MathUtils from '../math/MathUtils.js';
 
 let materialId = 0;
 
@@ -77,6 +77,8 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 	constructor: Material,
 
 	isMaterial: true,
+
+	onBuild: function ( /* shaderobject, renderer */ ) {},
 
 	onBeforeCompile: function ( /* shaderobject, renderer */ ) {},
 
@@ -247,13 +249,14 @@ Material.prototype = Object.assign( Object.create( EventDispatcher.prototype ), 
 		if ( this.envMap && this.envMap.isTexture ) {
 
 			data.envMap = this.envMap.toJSON( meta ).uuid;
-			data.reflectivity = this.reflectivity; // Scale behind envMap
-			data.refractionRatio = this.refractionRatio;
 
 			if ( this.combine !== undefined ) data.combine = this.combine;
-			if ( this.envMapIntensity !== undefined ) data.envMapIntensity = this.envMapIntensity;
 
 		}
+
+		if ( this.envMapIntensity !== undefined ) data.envMapIntensity = this.envMapIntensity;
+		if ( this.reflectivity !== undefined ) data.reflectivity = this.reflectivity;
+		if ( this.refractionRatio !== undefined ) data.refractionRatio = this.refractionRatio;
 
 		if ( this.gradientMap && this.gradientMap.isTexture ) {
 
