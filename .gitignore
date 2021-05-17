@@ -28,3 +28,6 @@ node_modules/*
 build/three.module.js
 build/three.min.js
 build/three.js
+build/three.js
+build/three.min.js
+build/three.module.js
