@@ -15,11 +15,17 @@
 			import { OrbitControls } from "./jsm/controls/OrbitControls.js";
 			import { SceneUtils } from "./jsm/utils/SceneUtils.js";
 
+			import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
+			import { RGBELoader } from "./jsm/loaders/RGBELoader.js";
+			import { RoughnessMipmapper } from "./jsm/utils/RoughnessMipmapper.js";
+
 			let camera, scene, renderer;
 			let mesh;
 
 			init();
 			animate();
+
+			const modelMeshes = [];
 
 			function init() {
 				camera = new THREE.PerspectiveCamera(
@@ -32,24 +38,22 @@
 
 				scene = new THREE.Scene();
 
-				scene.background = new THREE.Color(0xffffff);
+				scene.background = new THREE.Color(0x777777);
 
-				// scene.add(new THREE.AmbientLight(0xffffff, 5));
+				scene.add(new THREE.AmbientLight(0xffffff, 5));
 
 				const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 				scene.add(directionalLight);
 
 				const pathArr = [
-					[0, 0, 0],
-					[100, 0, 0],
-					[100, 50, 0],
-					[100, 50, -50],
+					[-43.26, 92.049, 48.325],
+					[-43.26, 0, 48.325],
+					[-5, 0, 48.325],
+					[-5, 0, -65],
+					[-5, -93, -65],
 				];
-
-				const texture = new THREE.TextureLoader().load("textures/arrow.png");
-
-				mesh = createTube(pathArr, texture);
-
+				const arrowTexture = new THREE.TextureLoader().load("textures/red.png");
+				mesh = createTube(pathArr);
 				scene.add(mesh);
 
 				renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -57,8 +61,61 @@
 				renderer.setSize(window.innerWidth, window.innerHeight);
 				document.body.appendChild(renderer.domElement);
 
-				//
 				const controls = new OrbitControls(camera, renderer.domElement);
+
+				// const pmremGenerator = new THREE.PMREMGenerator(renderer);
+				// pmremGenerator.compileEquirectangularShader();
+
+				// 读取模型
+				new RGBELoader()
+					.setDataType(THREE.UnsignedByteType)
+					.setPath("textures/equirectangular/")
+					.load("royal_esplanade_1k.hdr", function (texture) {
+						// const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+
+						// scene.background = envMap;
+						// scene.environment = envMap;
+
+						// texture.dispose();
+						// pmremGenerator.dispose();
+
+						// model
+
+						// use of RoughnessMipmapper is optional
+						const roughnessMipmapper = new RoughnessMipmapper(renderer);
+
+						const loader = new GLTFLoader().setPath("models/gltf/Tube/");
+						loader.load("scene.gltf", function (gltf) {
+							const material = new THREE.MeshBasicMaterial({
+								color: 0xff0000,
+							});
+
+							gltf.scene.traverse(function (child) {
+								if (child.isMesh) {
+									// TOFIX RoughnessMipmapper seems to be broken with WebGL 2.0
+									// roughnessMipmapper.generateMipmaps( child.material );
+									modelMeshes.push(child);
+
+									// const mesh = child.clone();
+									// mesh.name = child.name;
+									// mesh.position.copy(child.getWorldPosition());
+
+									// geometry.setAttribute(
+									// 	"position",
+									// 	child.geometry.attributes.position.clone()
+									// );
+
+									// child.material = material;
+									// scene.add(mesh);
+									// scene.add(new THREE.BoxHelper(child));
+								}
+							});
+
+							// scene.add(gltf.scene);
+
+							roughnessMipmapper.dispose();
+						});
+					});
 
 				window.addEventListener("resize", onWindowResize);
 			}
@@ -77,7 +134,7 @@
 			}
 
 			// 动态创建一个管道
-			function createTube(pathArr, texture, radius = 10) {
+			function createTube(pathArr, texture = null, radius = 10) {
 				let curveArr = [];
 				for (let i = 0; i < pathArr.length; i += 1) {
 					const arr = pathArr[i];
@@ -94,26 +151,59 @@
 				);
 
 				const basicMaterial = new THREE.MeshBasicMaterial({
-					color: 0x556e33,
+					color: 0x001155,
 					side: THREE.DoubleSide,
 				});
+
+				if (!texture) {
+					// 数据纹理
+					const width = 2;
+					const height = 1;
+
+					const size = width * height;
+					const data = new Uint8Array(4 * size);
+					const colors = [
+						[255, 255, 255, 255],
+						[0, 0, 0, 0],
+					];
+
+					for (let i = 0; i < size; i++) {
+						const stride = i * 4;
+						const color = colors[i];
+						data[stride] = color[0];
+						data[stride + 1] = color[1];
+						data[stride + 2] = color[2];
+						data[stride + 3] = color[3];
+					}
+
+					// used the buffer to create a DataTexture
+
+					texture = new THREE.DataTexture(
+						data,
+						width,
+						height,
+						THREE.RGBAFormat
+					);
+
+					texture.needsUpdate = true;
+				}
+
 				// 设置阵列模式 RepeatWrapping
-				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapS = THREE.ClampToEdgeWrapping;
 				texture.wrapT = THREE.RepeatWrapping;
 				// 设置x方向的重复数(沿着管道路径方向)
 				// 设置y方向的重复数(环绕管道方向)
-				texture.repeat.x = 10;
-				texture.repeat.y = 2;
+				texture.repeat.x = 1;
+				texture.repeat.y = 1;
 				// 设置管道纹理偏移数,便于对中
-				texture.offset.y = 0.5;
+				texture.offset.x = 0.5;
+				texture.offset.y = 0;
 				const tubeMaterial = new THREE.MeshPhongMaterial({
 					map: texture,
 					transparent: true,
 					color: new THREE.Color(0x00ffff),
 				});
 
-				// const tubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-				// const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
 				// 多材质
 				const tube = SceneUtils.createMultiMaterialObject(tubeGeometry, [
 					tubeMaterial,
@@ -121,9 +211,36 @@
 				]);
 				// 使用加减法可以设置不同的运动方向
 				setInterval(() => {
-					texture.offset.x -= 0.0076;
+					texture.offset.x -= 0.001;
+					if (texture.offset.x < -0.5) {
+						texture.offset.x = 0.5;
+					}
 				});
 				return tube;
+			}
+
+			function addDynamicTexture(mesh, texture) {
+				// 设置阵列模式 RepeatWrapping
+				texture.wrapS = THREE.ClampToEdgeWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				// 设置x方向的重复数(沿着管道路径方向)
+				// 设置y方向的重复数(环绕管道方向)
+				texture.repeat.x = 10;
+				texture.repeat.y = 2;
+				// 设置管道纹理偏移数,便于对中
+				texture.offset.y = 0.5;
+
+				const tubeMaterial = new THREE.MeshPhongMaterial({
+					map: texture,
+					transparent: true,
+					color: new THREE.Color(0x00ffff),
+				});
+
+				setInterval(() => {
+					texture.offset.x -= 0.0076;
+				});
+
+				mesh.material = tubeMaterial;
 			}
 		</script>
 	</body>
