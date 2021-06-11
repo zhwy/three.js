@@ -7,17 +7,18 @@
 			name="viewport"
 			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
 		/>
-		<link type="text/css" rel="stylesheet" href="main.css" />
+		<link type="text/css" rel="stylesheet" href="../main.css" />
 	</head>
 	<body>
 		<script type="module">
-			import * as THREE from "../build/three.module.js";
-			import { OrbitControls } from "./jsm/controls/OrbitControls.js";
-			import { SceneUtils } from "./jsm/utils/SceneUtils.js";
+			import * as THREE from "../../build/three.module.js";
+			import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+			import { SceneUtils } from "../jsm/utils/SceneUtils.js";
 
-			import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
-			import { RGBELoader } from "./jsm/loaders/RGBELoader.js";
-			import { RoughnessMipmapper } from "./jsm/utils/RoughnessMipmapper.js";
+			import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
+			import { RGBELoader } from "../jsm/loaders/RGBELoader.js";
+			import { FBXLoader } from "../jsm/loaders/FBXLoader.js";
+			import { RoughnessMipmapper } from "../jsm/utils/RoughnessMipmapper.js";
 
 			let camera, scene, renderer;
 			let mesh;
@@ -40,9 +41,9 @@
 
 				scene.background = new THREE.Color(0x777777);
 
-				scene.add(new THREE.AmbientLight(0xffffff, 5));
+				scene.add(new THREE.AmbientLight(0xffffff, 2));
 
-				const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+				const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
 				scene.add(directionalLight);
 
 				const pathArr = [
@@ -51,12 +52,12 @@
 				];
 
 				const arrowTexture = new THREE.TextureLoader().load(
-					"textures/arrow.png"
+					"../textures/arrow.png"
 				);
 				arrowTexture.offset.x = 0;
 				arrowTexture.offset.y = 0.5;
-				arrowTexture.repeat.x = 10;
-				arrowTexture.repeat.y = 2;
+				arrowTexture.repeat.x = 1;
+				arrowTexture.repeat.y = 1;
 				arrowTexture.wrapS = THREE.RepeatWrapping;
 				arrowTexture.wrapT = THREE.RepeatWrapping;
 				setInterval(() => {
@@ -72,67 +73,38 @@
 
 				const controls = new OrbitControls(camera, renderer.domElement);
 
-				// const pmremGenerator = new THREE.PMREMGenerator(renderer);
-				// pmremGenerator.compileEquirectangularShader();
-
 				// 读取模型
-				new RGBELoader()
-					.setDataType(THREE.UnsignedByteType)
-					.setPath("textures/equirectangular/")
-					.load("royal_esplanade_1k.hdr", function (texture) {
-						// const envMap = pmremGenerator.fromEquirectangular(texture).texture;
 
-						// scene.background = envMap;
-						// scene.environment = envMap;
+				const loader = new GLTFLoader().setPath("../models/gltf/Tube/");
+				const models = ["loose.glb"];
 
-						// texture.dispose();
-						// pmremGenerator.dispose();
-
-						// model
-
-						// use of RoughnessMipmapper is optional
-						const roughnessMipmapper = new RoughnessMipmapper(renderer);
-
-						const loader = new GLTFLoader().setPath("models/gltf/Tube/");
-						const models = ["loose.glb", "tube_test.glb"];
-
-						models.forEach((model, i) => {
-							loader.load(model, function (gltf) {
-								if (i === 1) {
-									gltf.scene.position.y = 5;
-								}
-								gltf.scene.traverse(function (child) {
-									if (child.type === "LineSegments") {
-										const mesh = createTube(
-											child.geometry.attributes.position.array,
-											null,
-											0.1
-										);
-										scene.add(mesh);
-									}
-									if (child.isMesh) {
-										// TOFIX RoughnessMipmapper seems to be broken with WebGL 2.0
-										// roughnessMipmapper.generateMipmaps( child.material );
-										// modelMeshes.push(child);
-
-										if (child.name === "tube") {
-											// child.material = createDynamicMaterial();
-											const mesh = child.clone();
-											mesh.name = child.name + "_copy";
-											mesh.material = createDynamicMaterial(arrowTexture);
-											mesh.position.y = 5;
-											scene.add(mesh);
-											// scene.add(new THREE.BoxHelper(child));
-										}
-									}
-								});
-
-								scene.add(gltf.scene);
-
-								roughnessMipmapper.dispose();
-							});
+				models.forEach((model, i) => {
+					loader.load(model, function (gltf) {
+						gltf.scene.traverse(function (child) {
+							if (child.type === "LineSegments") {
+								const mesh = createTube(
+									child.geometry.attributes.position.array,
+									null,
+									0.1
+								);
+								scene.add(mesh);
+							}
+							if (child.isMesh) {
+								// modelMeshes.push(child);
+								// if (child.name === "tube") {
+								// child.material = createDynamicMaterial();
+								// const mesh = child.clone();
+								// mesh.name = child.name + "_copy";
+								// mesh.position.y = 5;
+								// scene.add(mesh);
+								// scene.add(new THREE.BoxHelper(child));
+								// }
+							}
 						});
+
+						scene.add(gltf.scene);
 					});
+				});
 
 				window.addEventListener("resize", onWindowResize);
 			}

@@ -1,4 +1,8 @@
 {
+  "myexamples":[
+    "myexamples/dynamic_tube",
+    "myexamples/texture_direction"
+  ],
   "webgl": [
     "webgl_animation_cloth",
     "webgl_animation_keyframes",
@@ -42,7 +46,6 @@
     "webgl_geometry_text",
     "webgl_geometry_text_shapes",
     "webgl_geometry_text_stroke",
-    "webgl_geometry_tube",
     "webgl_helpers",
     "webgl_instancing_dynamic",
     "webgl_instancing_performance",
