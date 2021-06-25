@@ -1,7 +1,8 @@
 {
-  "myexamples":[
+  "myexamples": [
     "myexamples/dynamic_tube",
-    "myexamples/texture_direction"
+    "myexamples/texture_direction",
+    "myexamples/drag_load"
   ],
   "webgl": [
     "webgl_animation_cloth",

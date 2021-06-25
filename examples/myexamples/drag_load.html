@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - geometry - cube</title>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+		/>
+		<link type="text/css" rel="stylesheet" href="../main.css" />
+	</head>
+	<body>
+		<script type="module">
+			import * as THREE from "../../build/three.module.js";
+			import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+
+			import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
+			import { FBXLoader } from "../jsm/loaders/FBXLoader.js";
+
+			import { IFCLoader } from "../jsm/loaders/IFCLoader.js";
+
+			let camera, scene, renderer;
+			let mesh;
+
+			let fbxLoader, ifcLoader;
+
+			init();
+			animate();
+			enableDropModel();
+
+			function init() {
+				camera = new THREE.PerspectiveCamera(
+					70,
+					window.innerWidth / window.innerHeight,
+					0.01,
+					100000
+				);
+				camera.position.copy(new THREE.Vector3(220, 220, 250));
+
+				scene = new THREE.Scene();
+
+				scene.background = new THREE.Color(0x777777);
+
+				scene.add(new THREE.AmbientLight(0xffffff, 2));
+
+				const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+				scene.add(directionalLight);
+
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				document.body.appendChild(renderer.domElement);
+
+				const controls = new OrbitControls(camera, renderer.domElement);
+
+				fbxLoader = new FBXLoader();
+
+				ifcLoader = new IFCLoader();
+				ifcLoader.setWasmPath("../jsm/loaders/ifc/");
+
+				window.addEventListener("resize", onWindowResize);
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+
+				renderer.render(scene, camera);
+			}
+
+			function enableDropModel() {
+				function readModelFile(file, files) {
+					// var reader = new FileReader();
+					// reader.readAsDataURL(file);
+					// reader.onload = (res) => {
+					// 	debugger;
+					// 	reader.result;
+					// };
+					const url = URL.createObjectURL(file);
+					if (file.name.includes(".ifc")) {
+						ifcLoader.load(url, (model) => {
+							scene.add(model);
+						});
+					}
+				}
+				function allowDrop(e) {
+					e.preventDefault();
+					e.stopPropagation();
+				}
+				function drop(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					var df = e.dataTransfer;
+					readModelFile(df.files[0]);
+				}
+
+				var container = renderer.domElement;
+				container.ondragenter = allowDrop;
+				container.ondragover = allowDrop;
+				container.ondragleave = allowDrop;
+				container.ondrop = drop;
+			}
+		</script>
+	</body>
+</html>

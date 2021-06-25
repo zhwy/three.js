@@ -63,6 +63,7 @@
 				const ifcLoader = new IFCLoader();
 				ifcLoader.setWasmPath( 'jsm/loaders/ifc/' );
 				ifcLoader.load( 'models/ifc/rac_advanced_sample_project.ifc', function ( model ) {
+					// ifcLoader.load( 'models/ifc/bridge.ifc', function ( model ) {
 
 					scene.add( model );
 					render();
