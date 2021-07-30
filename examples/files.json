@@ -2,7 +2,8 @@
   "myexamples": [
     "myexamples/dynamic_tube",
     "myexamples/texture_direction",
-    "myexamples/drag_load"
+    "myexamples/drag_load",
+    "myexamples/sky"
   ],
   "webgl": [
     "webgl_animation_cloth",
