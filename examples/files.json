@@ -3,7 +3,7 @@
     "myexamples/dynamic_tube",
     "myexamples/texture_direction",
     "myexamples/drag_load",
-    "myexamples/sky"
+    "myexamples/cloudy_sky"
   ],
   "webgl": [
     "webgl_animation_cloth",
@@ -92,6 +92,7 @@
     "webgl_loader_gltf",
     "webgl_loader_gltf_compressed",
     "webgl_loader_gltf_extensions",
+    "webgl_loader_gltf_transmission",
     "webgl_loader_gltf_variants",
     "webgl_loader_ifc",
     "webgl_loader_imagebitmap",
@@ -129,7 +130,6 @@
     "webgl_loader_vrm",
     "webgl_loader_vrml",
     "webgl_loader_vtk",
-    "webgl_loader_x",
     "webgl_loader_xyz",
     "webgl_lod",
     "webgl_marchingcubes",
@@ -185,7 +185,6 @@
     "webgl_modifier_simplifier",
     "webgl_modifier_tessellation",
     "webgl_morphtargets",
-    "webgl_morphtargets_mydemo",
     "webgl_morphtargets_horse",
     "webgl_morphtargets_sphere",
     "webgl_multiple_canvases_circle",
@@ -204,6 +203,7 @@
     "webgl_points_dynamic",
     "webgl_points_sprites",
     "webgl_points_waves",
+    "webgl_portal",
     "webgl_raycast_sprite",
     "webgl_raycast_texture",
     "webgl_read_float_buffer",
@@ -240,6 +240,7 @@
     "webgl_materials_envmaps_hdr_nodes",
     "webgl_materials_envmaps_pmrem_nodes",
     "webgl_materials_nodes",
+    "webgl_materials_standard_nodes",
     "webgl_mirror_nodes",
     "webgl_performance_nodes",
     "webgl_postprocessing_nodes",
@@ -316,6 +317,7 @@
     "webgl2_materials_texture2darray",
     "webgl2_materials_texture3d",
     "webgl2_materials_texture3d_partialupdate",
+    "webgl2_multiple_rendertargets",
     "webgl2_multisampled_renderbuffers",
     "webgl2_rendertarget_texture2darray",
     "webgl2_volume_cloud",
@@ -325,6 +327,8 @@
   "webgpu": [
     "webgpu_compute",
     "webgpu_instance_uniform",
+    "webgpu_lights_custom",
+    "webgpu_lights_selective",
     "webgpu_materials",
     "webgpu_rtt",
     "webgpu_sandbox"
@@ -346,7 +350,11 @@
     "webxr_vr_handinput",
     "webxr_vr_handinput_cubes",
     "webxr_vr_handinput_profiles",
+    "webxr_vr_handinput_pointerclick",
+    "webxr_vr_handinput_pointerdrag",
+    "webxr_vr_handinput_pressbutton",
     "webxr_vr_haptics",
+    "webxr_vr_layers",
     "webxr_vr_lorenzattractor",
     "webxr_vr_panorama",
     "webxr_vr_panorama_depth",
@@ -363,7 +371,8 @@
     "physics_ammo_instancing",
     "physics_ammo_rope",
     "physics_ammo_terrain",
-    "physics_ammo_volume"
+    "physics_ammo_volume",
+    "physics_oimo_instancing"
   ],
   "misc": [
     "misc_animation_groups",
