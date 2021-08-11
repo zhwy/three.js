@@ -3,7 +3,8 @@
     "myexamples/dynamic_tube",
     "myexamples/texture_direction",
     "myexamples/drag_load",
-    "myexamples/cloudy_sky"
+    "myexamples/cloudy_sky",
+    "myexamples/gltf_material"
   ],
   "webgl": [
     "webgl_animation_cloth",
