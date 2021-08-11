@@ -10,7 +10,7 @@ export default /* glsl */`
 
 	#endif
 
-	#ifdef USE_THICKNESSNMAP
+	#ifdef USE_THICKNESSMAP
 
 		thicknessFactor *= texture2D( thicknessMap, vUv ).g;
 
@@ -18,12 +18,13 @@ export default /* glsl */`
 
 	vec3 pos = vWorldPosition.xyz / vWorldPosition.w;
 	vec3 v = normalize( cameraPosition - pos );
+	vec3 n = inverseTransformDirection( normal, viewMatrix );
 	float ior = ( 1.0 + 0.4 * reflectivity ) / ( 1.0 - 0.4 * reflectivity );
 
 	vec3 transmission = transmissionFactor * getIBLVolumeRefraction(
-		normal, v, roughnessFactor, material.diffuseColor, totalSpecular,
+		n, v, roughnessFactor, material.diffuseColor, material.specularColor,
 		pos, modelMatrix, viewMatrix, projectionMatrix, ior, thicknessFactor,
-		attenuationColor, attenuationDistance );
+		attenuationTint, attenuationDistance );
 
 	totalDiffuse = mix( totalDiffuse, transmission, transmissionFactor );
 #endif
