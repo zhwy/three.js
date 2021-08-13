@@ -22,10 +22,12 @@
 				position: absolute;
 				top: 0;
 				left: 0;
-				height: 20px;
-				width: 20px;
+				width: auto;
 				background-color: white;
 				transform: translate(-50%, -50%);
+				padding: 5px;
+				color: black;
+				white-space: nowrap;
 			}
 		</style>
 
@@ -48,6 +50,8 @@
 			let sky,
 				sun = new THREE.Vector3(15, 20, 10);
 
+			let grass;
+
 			let then = 0,
 				time = 0;
 
@@ -64,6 +68,7 @@
 			);
 
 			const popup = document.getElementById("popup");
+			let popupPos = new THREE.Vector3(0, 5, 0);
 
 			init();
 
@@ -150,14 +155,6 @@
 					RIGHT: THREE.MOUSE.DOLLY,
 				});
 
-				controls.addEventListener("change", () => {
-					const newPos = new THREE.Vector3(0, 5, 0).project(camera);
-					const x = ((newPos.x + 1) / 2) * window.innerWidth;
-					const y = ((-newPos.y + 1) / 2) * window.innerHeight;
-					popup.style.top = y + "px";
-					popup.style.left = x + "px";
-				});
-
 				const light1 = new THREE.AmbientLight();
 				light1.name = "ambient_light";
 				light1.intensity = 1;
@@ -230,6 +227,36 @@
 				);
 
 				// scene.fog = new THREE.Fog(0xaaaaaa, 5000, 100000);
+				const col = 40;
+				const row = 40;
+
+				loader.load("../models/gltf/grass/scene.gltf", (gltf) => {
+					gltf.scene.traverse((child) => {
+						if (child.isMesh) {
+							const defaultTransform = new THREE.Matrix4().makeRotationX(
+								-Math.PI / 2
+							);
+							child.geometry.applyMatrix4(defaultTransform);
+							grass = new THREE.InstancedMesh(
+								child.geometry,
+								child.material,
+								col * row
+							);
+						}
+					});
+
+					const dummy = new THREE.Object3D();
+					for (let i = 0; i < row; i++) {
+						for (let j = 0; j < col; j++) {
+							dummy.position.set(-56 + 0.5 * j, 0.4, -28 + 0.5 * i);
+							dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
+							dummy.updateMatrix();
+							grass.setMatrixAt(i * col + j, dummy.matrix);
+						}
+					}
+
+					scene.add(grass);
+				});
 			}
 
 			function onWindowResize() {
@@ -254,6 +281,10 @@
 					if (old) old.set(0xffffff);
 					intersects[0].object.material.color.set(0xff0000);
 					mark.position.copy(intersects[0].point);
+					popupPos.set(mark.position.x, mark.position.y + 1, mark.position.z);
+
+					popup.innerHTML = `${mark.position.x}, ${mark.position.y}, ${mark.position.z}`;
+
 					old = intersects[0].object.material.color;
 				}
 			}
@@ -272,6 +303,12 @@
 				if (now < 1) sky.material.uniforms.u_noise.value = texture;
 
 				renderer.render(scene, camera);
+
+				const newPos = popupPos.clone().project(camera);
+				const x = ((newPos.x + 1) / 2) * window.innerWidth;
+				const y = ((-newPos.y + 1) / 2) * window.innerHeight;
+				popup.style.top = y + "px";
+				popup.style.left = x + "px";
 
 				requestAnimationFrame(animate);
 			}

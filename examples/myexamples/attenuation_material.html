@@ -43,7 +43,7 @@
 				scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
 				const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-				directionalLight.position.set(10, 10, 10);
+				directionalLight.position.set(10, 10, -10);
 				scene.add(directionalLight);
 				const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
 				scene.add(helper);
@@ -57,23 +57,23 @@
 
 				const pmremGenerator = new THREE.PMREMGenerator(renderer);
 				pmremGenerator.compileEquirectangularShader();
-				// new RGBELoader()
-				// 	.setDataType(THREE.UnsignedByteType)
-				// 	.setPath("../textures/equirectangular/")
-				// 	.load("royal_esplanade_1k.hdr", function (texture) {
-				// 		const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+				new RGBELoader()
+					.setDataType(THREE.UnsignedByteType)
+					.setPath("../textures/equirectangular/")
+					.load("royal_esplanade_1k.hdr", function (texture) {
+						const envMap = pmremGenerator.fromEquirectangular(texture).texture;
 
-				// 		scene.background = envMap;
-				// 		scene.environment = envMap;
+						scene.background = envMap;
+						scene.environment = envMap;
 
-				// 		texture.dispose();
-				// 		pmremGenerator.dispose();
-				// 	});
+						texture.dispose();
+						pmremGenerator.dispose();
+					});
 
 				// 读取模型
 
-				const loader = new GLTFLoader().setPath("../models/gltf/MaterialTest/");
-				const models = ["AttenuationTest.glb"];
+				const loader = new GLTFLoader().setPath("../models/gltf/AttenuationTest/");
+				const models = ["test.gltf"];
 
 				models.forEach((model, i) => {
 					loader.load(model, function (gltf) {
