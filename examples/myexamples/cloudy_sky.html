@@ -42,6 +42,7 @@
 			import { Sky } from "../jsm/objects/Sky.js";
 			import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
 			import { DRACOLoader } from "../jsm/loaders/DRACOLoader.js";
+			import { Water } from "../jsm/objects/Water2.js";
 
 			let camera, scene, renderer;
 
@@ -125,7 +126,7 @@
 				renderer.setSize(window.innerWidth, window.innerHeight);
 				renderer.outputEncoding = THREE.sRGBEncoding;
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 0.5;
+				renderer.toneMappingExposure = 0.8;
 
 				renderer.shadowMap.enabled = true;
 				// renderer.shadowMap.needsUpdate = true;
@@ -204,9 +205,10 @@
 					.setDRACOLoader(
 						new DRACOLoader().setDecoderPath("../js/libs/draco/")
 					);
+
 				loader.load(
-					"https://maps.bim-ace.com:10202/models/陈行/base_d.glb",
-					// "../models/gltf/low_poly_building.glb",
+					"https://maps.bim-ace.com:10202/models/陈行/base_d_0820.glb",
+					// "../models/base_d_0818.glb",
 					// "https://maps.bim-ace.com:10202/models/simplemodel.glb",
 					(gltf) => {
 						gltf.scene.traverse(function (child) {
@@ -216,6 +218,105 @@
 								child.geometry.computeFaceNormals();
 								if (!child.material instanceof THREE.MeshStandardMaterial) {
 									debugger;
+								}
+								if (child.name === "水面") {
+									const param = {
+										color: "#ffffff",
+										scale: 1,
+										flowDirection: new THREE.Vector2(1, 1),
+										textureWidth: 1024,
+										textureHeight: 1024,
+										normalMap0: new THREE.TextureLoader().load(
+											"../textures/water/Water_1_M_Normal.jpg"
+										),
+										normalMap1: new THREE.TextureLoader().load(
+											"../textures/water/Water_2_M_Normal.jpg"
+										),
+										reflectivity: 0,
+									};
+
+									const geometry = new THREE.BufferGeometry();
+									// tempGeometry.setIndex(child.geometry.index.array);
+									// tempGeometry.setAttribute(
+									// 	"position",
+									// 	new THREE.Float32BufferAttribute(
+									// 		child.geometry.attributes.position.array,
+									// 		3
+									// 	)
+									// );
+									// tempGeometry.setAttribute(
+									// 	"normal",
+									// 	new THREE.Float32BufferAttribute(
+									// 		child.geometry.attributes.normalarray,
+									// 		3
+									// 	)
+									// );
+									// tempGeometry.setAttribute(
+									// 	"uv",
+									// 	new THREE.Float32BufferAttribute(
+									// 		child.geometry.attributes.uv.array,
+									// 		2
+									// 	)
+									// );
+
+									// generate vertices, normals and color data for a simple grid geometry
+
+									const a = 10;
+									const y = 0;
+
+									// const vertices = [-a, y, -a, a, y, -a, -a, y, a, a, y, a];
+									// const normals = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+
+									const vertices = [-a, a, y, a, a, y, -a, -a, y, a, -a, y];
+									const normals = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+
+									// generate indices (data for element array buffer)
+
+									const indices = [0, 2, 1, 2, 3, 1];
+									const uvs = [0, 1, 1, 1, 0, 0, 1, 0];
+
+									//
+
+									geometry.setIndex(indices);
+									geometry.setAttribute(
+										"position",
+										new THREE.Float32BufferAttribute(vertices, 3)
+									);
+									geometry.setAttribute(
+										"normal",
+										new THREE.Float32BufferAttribute(normals, 3)
+									);
+									geometry.setAttribute(
+										"uv",
+										new THREE.Float32BufferAttribute(uvs, 2)
+									);
+
+									const water = new Water(child.geometry, param);
+									water.name = "water";
+									// water.position.z = -10;
+
+									// child.parent.add(water);
+
+									const squareShape = new THREE.Shape()
+										.moveTo(0, 0)
+										.lineTo(0, 9)
+										.lineTo(33.852, 9.3378)
+										.lineTo(33.852, 0.03)
+										.lineTo(0, 0);
+									const waterGeometry = new THREE.ShapeGeometry(squareShape);
+									// const waterGeometry = new THREE.PlaneGeometry(20, 20);
+									const test = new Water(waterGeometry, param);
+
+									test.rotation.x = Math.PI * -0.5;
+									test.position.copy(child.position);
+									test.position.y += 0.1;
+									test.name = "water";
+
+									child.parent.add(test);
+									// child.parent.remove(child);
+
+									// child.geometry.dispose();
+									// child.material.dispose();
 								}
 							}
 						});
@@ -227,36 +328,36 @@
 				);
 
 				// scene.fog = new THREE.Fog(0xaaaaaa, 5000, 100000);
-				const col = 40;
-				const row = 40;
+				// const col = 40;
+				// const row = 40;
 
-				loader.load("../models/gltf/grass/scene.gltf", (gltf) => {
-					gltf.scene.traverse((child) => {
-						if (child.isMesh) {
-							const defaultTransform = new THREE.Matrix4().makeRotationX(
-								-Math.PI / 2
-							);
-							child.geometry.applyMatrix4(defaultTransform);
-							grass = new THREE.InstancedMesh(
-								child.geometry,
-								child.material,
-								col * row
-							);
-						}
-					});
+				// loader.load("../models/gltf/grass/scene.gltf", (gltf) => {
+				// 	gltf.scene.traverse((child) => {
+				// 		if (child.isMesh) {
+				// 			const defaultTransform = new THREE.Matrix4().makeRotationX(
+				// 				-Math.PI / 2
+				// 			);
+				// 			child.geometry.applyMatrix4(defaultTransform);
+				// 			grass = new THREE.InstancedMesh(
+				// 				child.geometry,
+				// 				child.material,
+				// 				col * row
+				// 			);
+				// 		}
+				// 	});
 
-					const dummy = new THREE.Object3D();
-					for (let i = 0; i < row; i++) {
-						for (let j = 0; j < col; j++) {
-							dummy.position.set(-56 + 0.5 * j, 0.4, -28 + 0.5 * i);
-							dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
-							dummy.updateMatrix();
-							grass.setMatrixAt(i * col + j, dummy.matrix);
-						}
-					}
+				// 	const dummy = new THREE.Object3D();
+				// 	for (let i = 0; i < row; i++) {
+				// 		for (let j = 0; j < col; j++) {
+				// 			dummy.position.set(-56 + 0.5 * j, 0.4, -28 + 0.5 * i);
+				// 			dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
+				// 			dummy.updateMatrix();
+				// 			grass.setMatrixAt(i * col + j, dummy.matrix);
+				// 		}
+				// 	}
 
-					scene.add(grass);
-				});
+				// 	scene.add(grass);
+				// });
 			}
 
 			function onWindowResize() {
@@ -267,6 +368,9 @@
 			}
 
 			let old;
+			const tempMaterial = new THREE.MeshStandardMaterial({
+				color: 0xffaa00,
+			});
 			function pick(e) {
 				mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
 				mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -278,14 +382,26 @@
 				);
 
 				if (intersects.length > 0) {
-					if (old) old.set(0xffffff);
-					intersects[0].object.material.color.set(0xff0000);
+					if (old) {
+						old.mesh.material = old.material;
+					}
+
+					if (intersects[0].object.name === "water") return;
+
+					old = {
+						mesh: intersects[0].object,
+						material: intersects[0].object.material,
+					};
+
+					console.log(old.mesh);
+
+					intersects[0].object.material = tempMaterial;
 					mark.position.copy(intersects[0].point);
 					popupPos.set(mark.position.x, mark.position.y + 1, mark.position.z);
 
-					popup.innerHTML = `${mark.position.x}, ${mark.position.y}, ${mark.position.z}`;
-
-					old = intersects[0].object.material.color;
+					popup.innerHTML = `${old.mesh.name}<br/>${Math.round(
+						mark.position.x
+					)}, ${Math.round(mark.position.y)}, ${Math.round(mark.position.z)}`;
 				}
 			}
 
