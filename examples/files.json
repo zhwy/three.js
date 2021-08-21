@@ -4,7 +4,8 @@
     "myexamples/texture_direction",
     "myexamples/drag_load",
     "myexamples/cloudy_sky",
-    "myexamples/attenuation_material"
+    "myexamples/attenuation_material",
+    "myexamples/water_test"
   ],
   "webgl": [
     "webgl_animation_cloth",

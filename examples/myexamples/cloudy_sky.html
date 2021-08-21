@@ -1,433 +1,434 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>three.js webgl - shaders - sky sun shader</title>
-		<meta charset="utf-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-		/>
-		<link type="text/css" rel="stylesheet" href="../main.css" />
-	</head>
 
-	<body>
-		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>
-			webgl - sky + sun shader
-		</div>
-		<div id="popup"></div>
+<head>
+	<title>three.js webgl - shaders - sky sun shader</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+	<link type="text/css" rel="stylesheet" href="../main.css" />
+</head>
 
-		<style>
-			#popup {
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: auto;
-				background-color: white;
-				transform: translate(-50%, -50%);
-				padding: 5px;
-				color: black;
-				white-space: nowrap;
-			}
-		</style>
+<body>
+	<div id="info">
+		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>
+		webgl - sky + sun shader
+	</div>
+	<div id="popup"></div>
 
-		<script type="module">
-			import * as THREE from "../../build/three.module.js";
+	<style>
+		#popup {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: auto;
+			background-color: white;
+			transform: translate(-50%, -50%);
+			padding: 5px;
+			color: black;
+			white-space: nowrap;
+		}
+	</style>
 
-			import { GUI } from "../jsm/libs/dat.gui.module.js";
-			import {
-				OrbitControls,
-				MapControls,
-			} from "../jsm/controls/OrbitControls.js";
-			import { Sky } from "../jsm/objects/Sky.js";
-			import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
-			import { DRACOLoader } from "../jsm/loaders/DRACOLoader.js";
-			import { Water } from "../jsm/objects/Water2.js";
+	<script type="module">
+		import * as THREE from "../../build/three.module.js";
 
-			let camera, scene, renderer;
+		import { GUI } from "../jsm/libs/dat.gui.module.js";
+		import {
+			OrbitControls,
+			MapControls,
+		} from "../jsm/controls/OrbitControls.js";
+		import { Sky } from "../jsm/objects/Sky.js";
+		import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
+		import { DRACOLoader } from "../jsm/loaders/DRACOLoader.js";
+		import { Water } from "../jsm/objects/Water2.js";
 
-			let controls;
+		let camera, scene, renderer;
 
-			let sky,
-				sun = new THREE.Vector3(15, 20, 10);
+		let controls;
 
-			let grass;
+		let sky,
+			sun = new THREE.Vector3(15, 20, 10);
 
-			let then = 0,
-				time = 0;
+		let grass;
 
-			const mouse = new THREE.Vector3();
-			const raycaster = new THREE.Raycaster();
+		let then = 0,
+			time = 0;
 
-			const texture = new THREE.TextureLoader().load("../textures/noise.png");
-			texture.wrapS = THREE.RepeatWrapping;
-			texture.wrapT = THREE.RepeatWrapping;
+		const mouse = new THREE.Vector3();
+		const raycaster = new THREE.Raycaster();
 
-			const mark = new THREE.Mesh(
-				new THREE.SphereGeometry(0.1, 32, 32),
-				new THREE.MeshLambertMaterial({ color: 0xffff00 })
+		const texture = new THREE.TextureLoader().load("../textures/noise.png");
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+
+		const mark = new THREE.Mesh(
+			new THREE.SphereGeometry(0.1, 32, 32),
+			new THREE.MeshLambertMaterial({ color: 0xffff00 })
+		);
+
+		const popup = document.getElementById("popup");
+		let popupPos = new THREE.Vector3(0, 5, 0);
+
+		init();
+
+		function initSky() {
+			fetch("./sky.glsl")
+				.then((res) => res.text())
+				.then((text) => {
+					// const phi = 0;
+					// const theta = Math.PI;
+
+					// sun.setFromSphericalCoords(1, phi, theta);
+					const params = {
+						uniforms: {
+							u_time: { value: 0 },
+							u_resolution: { value: new THREE.Vector2() },
+							u_noise: {
+								value: texture,
+							},
+							sunPosition: {
+								value: sun,
+							},
+							turbidity: { value: 3.8 },
+							rayleigh: { value: 0.28 },
+							mieCoefficient: { value: 0.005 },
+							mieDirectionalG: { value: 0 },
+							up: { value: new THREE.Vector3(0, 1, 0) },
+						},
+						fragmentShader: text,
+					};
+					Object.assign(Sky.SkyShader, params);
+					// Add Sky
+					sky = new Sky();
+					sky.geometry = new THREE.SphereGeometry(15, 32, 16);
+					sky.scale.setScalar(450000);
+					scene.add(sky);
+
+					requestAnimationFrame(animate);
+				});
+		}
+
+		function init() {
+			scene = new THREE.Scene();
+
+			scene.add(mark);
+
+			const helper = new THREE.GridHelper(10000, 2, 0xffffff, 0xffffff);
+			scene.add(helper);
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+				alpha: true,
+			});
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.outputEncoding = THREE.sRGBEncoding;
+			renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			renderer.toneMappingExposure = 0.8;
+
+			renderer.shadowMap.enabled = true;
+			// renderer.shadowMap.needsUpdate = true;
+			renderer.shadowMap.type = THREE.PCFShadowMap;
+
+			document.body.appendChild(renderer.domElement);
+
+			camera = new THREE.PerspectiveCamera(
+				60,
+				renderer.domElement.width / renderer.domElement.height,
+				1,
+				2000000
+			);
+			camera.position.set(0, 10, 50);
+
+			scene.add(camera);
+
+			initSky();
+
+			window.addEventListener("resize", onWindowResize);
+
+			renderer.domElement.addEventListener("click", pick, false);
+
+			controls = new MapControls(camera, renderer.domElement);
+			Object.assign(controls.mouseButtons, {
+				MIDDLE: THREE.MOUSE.ROTATE,
+				RIGHT: THREE.MOUSE.DOLLY,
+			});
+
+			const light1 = new THREE.AmbientLight();
+			light1.name = "ambient_light";
+			light1.intensity = 1;
+			camera.add(light1);
+
+			const light2 = new THREE.DirectionalLight();
+			light2.position.copy(sun);
+			light2.name = "main_light";
+			light2.intensity = 1;
+			light2.castShadow = true;
+			light2.shadow.camera.near = 0.1;
+			light2.shadow.camera.far = 200;
+			light2.shadow.bias = -0.0015;
+			const mapSize = 1024 * 2;
+			light2.shadow.mapSize.width = mapSize;
+			light2.shadow.mapSize.height = mapSize;
+
+			const a = 15;
+			light2.shadow.camera.left = -a;
+			light2.shadow.camera.right = a;
+			light2.shadow.camera.top = a;
+			light2.shadow.camera.bottom = -a;
+			light2.shadow.camera.zoom = 0.1;
+			light2.shadow.radius = 1;
+
+			scene.add(light2);
+			const lhelper = new THREE.DirectionalLightHelper(light2);
+			scene.add(lhelper);
+			const cameraHelper = new THREE.CameraHelper(light2.shadow.camera);
+			scene.add(cameraHelper);
+
+			const material = new THREE.MeshLambertMaterial({
+				color: 0x66851d,
+				// depthWrite: false,
+			});
+			material.side = THREE.DoubleSide;
+			const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(), material);
+			groundMesh.scale.setScalar(450000);
+			groundMesh.position.y = -1;
+
+			groundMesh.rotation.x = -Math.PI / 2;
+			groundMesh.receiveShadow = true;
+			// scene.add(groundMesh);
+
+			const loader = new GLTFLoader()
+				.setCrossOrigin("anonymous")
+				.setDRACOLoader(
+					new DRACOLoader().setDecoderPath("../js/libs/draco/")
+				);
+
+			loader.load(
+				"https://maps.bim-ace.com:10202/models/陈行/base_d_0820.glb",
+				// "../models/base_d_0818.glb",
+				// "https://maps.bim-ace.com:10202/models/simplemodel.glb",
+				(gltf) => {
+					gltf.scene.traverse(function (child) {
+						if (child.isMesh) {
+							child.castShadow = true;
+							child.receiveShadow = true;
+							child.geometry.computeFaceNormals();
+							if (!child.material instanceof THREE.MeshStandardMaterial) {
+								debugger;
+							}
+							// const flowMap = new THREE.TextureLoader().load('../textures/water/Water_1_M_Flow.jpg');
+							if (child.name === "水面") {
+								const param = {
+									color: "#ffffff",
+									scale: 1,
+									// flowDirection: new THREE.Vector2(1, 1),
+									textureWidth: 1024,
+									textureHeight: 1024,
+									normalMap0: new THREE.TextureLoader().load(
+										"../textures/water/Water_1_M_Normal.jpg"
+									),
+									normalMap1: new THREE.TextureLoader().load(
+										"../textures/water/Water_2_M_Normal.jpg"
+									),
+									// reflectivity: 0,
+									// flowMap: flowMap
+								};
+
+								const geometry = new THREE.BufferGeometry();
+								// tempGeometry.setIndex(child.geometry.index.array);
+								// tempGeometry.setAttribute(
+								// 	"position",
+								// 	new THREE.Float32BufferAttribute(
+								// 		child.geometry.attributes.position.array,
+								// 		3
+								// 	)
+								// );
+								// tempGeometry.setAttribute(
+								// 	"normal",
+								// 	new THREE.Float32BufferAttribute(
+								// 		child.geometry.attributes.normalarray,
+								// 		3
+								// 	)
+								// );
+								// tempGeometry.setAttribute(
+								// 	"uv",
+								// 	new THREE.Float32BufferAttribute(
+								// 		child.geometry.attributes.uv.array,
+								// 		2
+								// 	)
+								// );
+
+								// generate vertices, normals and color data for a simple grid geometry
+
+								const a = 10;
+								const y = 0;
+
+								// const vertices = [-a, y, -a, a, y, -a, -a, y, a, a, y, a];
+								// const normals = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+
+								const vertices = [-a, a, y, a, a, y, -a, -a, y, a, -a, y];
+								const normals = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+
+								// generate indices (data for element array buffer)
+
+								const indices = [0, 2, 1, 2, 3, 1];
+								const uvs = [0, 1, 1, 1, 0, 0, 1, 0];
+
+								//
+
+								geometry.setIndex(indices);
+								geometry.setAttribute(
+									"position",
+									new THREE.Float32BufferAttribute(vertices, 3)
+								);
+								geometry.setAttribute(
+									"normal",
+									new THREE.Float32BufferAttribute(normals, 3)
+								);
+								geometry.setAttribute(
+									"uv",
+									new THREE.Float32BufferAttribute(uvs, 2)
+								);
+
+								const water = new Water(child.geometry, param);
+								water.name = "water";
+								// water.position.z = -10;
+
+								// child.parent.add(water);
+
+								const squareShape = new THREE.Shape()
+									.moveTo(0, 0)
+									.lineTo(0, 9)
+									.lineTo(33.852, 9.3378)
+									.lineTo(33.852, 0.03)
+									.lineTo(0, 0);
+								const waterGeometry = new THREE.ShapeGeometry(squareShape);
+								// const waterGeometry = new THREE.PlaneGeometry(20, 20);
+								const test = new Water(waterGeometry, param);
+
+								test.rotation.x = Math.PI * -0.5;
+								test.position.copy(child.position);
+								test.position.y += 0.1;
+								test.name = "water";
+
+								child.parent.add(test);
+								// child.parent.remove(child);
+
+								// child.geometry.dispose();
+								// child.material.dispose();
+							}
+						}
+					});
+
+					// gltf.scene.scale.multiplyScalar(100);
+
+					scene.add(gltf.scene);
+				}
 			);
 
-			const popup = document.getElementById("popup");
-			let popupPos = new THREE.Vector3(0, 5, 0);
+			// scene.fog = new THREE.Fog(0xaaaaaa, 5000, 100000);
+			// const col = 40;
+			// const row = 40;
 
-			init();
+			// loader.load("../models/gltf/grass/scene.gltf", (gltf) => {
+			// 	gltf.scene.traverse((child) => {
+			// 		if (child.isMesh) {
+			// 			const defaultTransform = new THREE.Matrix4().makeRotationX(
+			// 				-Math.PI / 2
+			// 			);
+			// 			child.geometry.applyMatrix4(defaultTransform);
+			// 			grass = new THREE.InstancedMesh(
+			// 				child.geometry,
+			// 				child.material,
+			// 				col * row
+			// 			);
+			// 		}
+			// 	});
 
-			function initSky() {
-				fetch("./sky.glsl")
-					.then((res) => res.text())
-					.then((text) => {
-						// const phi = 0;
-						// const theta = Math.PI;
+			// 	const dummy = new THREE.Object3D();
+			// 	for (let i = 0; i < row; i++) {
+			// 		for (let j = 0; j < col; j++) {
+			// 			dummy.position.set(-56 + 0.5 * j, 0.4, -28 + 0.5 * i);
+			// 			dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
+			// 			dummy.updateMatrix();
+			// 			grass.setMatrixAt(i * col + j, dummy.matrix);
+			// 		}
+			// 	}
 
-						// sun.setFromSphericalCoords(1, phi, theta);
-						const params = {
-							uniforms: {
-								u_time: { value: 0 },
-								u_resolution: { value: new THREE.Vector2() },
-								u_noise: {
-									value: texture,
-								},
-								sunPosition: {
-									value: sun,
-								},
-								turbidity: { value: 3.8 },
-								rayleigh: { value: 0.28 },
-								mieCoefficient: { value: 0.005 },
-								mieDirectionalG: { value: 0 },
-								up: { value: new THREE.Vector3(0, 1, 0) },
-							},
-							fragmentShader: text,
-						};
-						Object.assign(Sky.SkyShader, params);
-						// Add Sky
-						sky = new Sky();
-						sky.geometry = new THREE.SphereGeometry(15, 32, 16);
-						sky.scale.setScalar(450000);
-						scene.add(sky);
+			// 	scene.add(grass);
+			// });
+		}
 
-						requestAnimationFrame(animate);
-					});
-			}
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
 
-			function init() {
-				scene = new THREE.Scene();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
 
-				scene.add(mark);
+		let old;
+		const tempMaterial = new THREE.MeshStandardMaterial({
+			color: 0xffaa00,
+		});
+		function pick(e) {
+			mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+			mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+			raycaster.setFromCamera(mouse, camera);
 
-				const helper = new THREE.GridHelper(10000, 2, 0xffffff, 0xffffff);
-				scene.add(helper);
+			const intersects = raycaster.intersectObjects(
+				scene.children[scene.children.length - 1].children,
+				true
+			);
 
-				renderer = new THREE.WebGLRenderer({
-					antialias: true,
-					alpha: true,
-				});
-				renderer.setPixelRatio(window.devicePixelRatio);
-				renderer.setSize(window.innerWidth, window.innerHeight);
-				renderer.outputEncoding = THREE.sRGBEncoding;
-				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 0.8;
-
-				renderer.shadowMap.enabled = true;
-				// renderer.shadowMap.needsUpdate = true;
-				renderer.shadowMap.type = THREE.PCFShadowMap;
-
-				document.body.appendChild(renderer.domElement);
-
-				camera = new THREE.PerspectiveCamera(
-					60,
-					renderer.domElement.width / renderer.domElement.height,
-					1,
-					2000000
-				);
-				camera.position.set(0, 10, 50);
-
-				scene.add(camera);
-
-				initSky();
-
-				window.addEventListener("resize", onWindowResize);
-
-				renderer.domElement.addEventListener("click", pick, false);
-
-				controls = new MapControls(camera, renderer.domElement);
-				Object.assign(controls.mouseButtons, {
-					MIDDLE: THREE.MOUSE.ROTATE,
-					RIGHT: THREE.MOUSE.DOLLY,
-				});
-
-				const light1 = new THREE.AmbientLight();
-				light1.name = "ambient_light";
-				light1.intensity = 1;
-				camera.add(light1);
-
-				const light2 = new THREE.DirectionalLight();
-				light2.position.copy(sun);
-				light2.name = "main_light";
-				light2.intensity = 1;
-				light2.castShadow = true;
-				light2.shadow.camera.near = 0.1;
-				light2.shadow.camera.far = 200;
-				light2.shadow.bias = -0.0015;
-				const mapSize = 1024 * 2;
-				light2.shadow.mapSize.width = mapSize;
-				light2.shadow.mapSize.height = mapSize;
-
-				const a = 15;
-				light2.shadow.camera.left = -a;
-				light2.shadow.camera.right = a;
-				light2.shadow.camera.top = a;
-				light2.shadow.camera.bottom = -a;
-				light2.shadow.camera.zoom = 0.1;
-				light2.shadow.radius = 1;
-
-				scene.add(light2);
-				const lhelper = new THREE.DirectionalLightHelper(light2);
-				scene.add(lhelper);
-				const cameraHelper = new THREE.CameraHelper(light2.shadow.camera);
-				scene.add(cameraHelper);
-
-				const material = new THREE.MeshLambertMaterial({
-					color: 0x66851d,
-					// depthWrite: false,
-				});
-				material.side = THREE.DoubleSide;
-				const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(), material);
-				groundMesh.scale.setScalar(450000);
-				groundMesh.position.y = -1;
-
-				groundMesh.rotation.x = -Math.PI / 2;
-				groundMesh.receiveShadow = true;
-				scene.add(groundMesh);
-
-				const loader = new GLTFLoader()
-					.setCrossOrigin("anonymous")
-					.setDRACOLoader(
-						new DRACOLoader().setDecoderPath("../js/libs/draco/")
-					);
-
-				loader.load(
-					"https://maps.bim-ace.com:10202/models/陈行/base_d_0820.glb",
-					// "../models/base_d_0818.glb",
-					// "https://maps.bim-ace.com:10202/models/simplemodel.glb",
-					(gltf) => {
-						gltf.scene.traverse(function (child) {
-							if (child.isMesh) {
-								child.castShadow = true;
-								child.receiveShadow = true;
-								child.geometry.computeFaceNormals();
-								if (!child.material instanceof THREE.MeshStandardMaterial) {
-									debugger;
-								}
-								if (child.name === "水面") {
-									const param = {
-										color: "#ffffff",
-										scale: 1,
-										flowDirection: new THREE.Vector2(1, 1),
-										textureWidth: 1024,
-										textureHeight: 1024,
-										normalMap0: new THREE.TextureLoader().load(
-											"../textures/water/Water_1_M_Normal.jpg"
-										),
-										normalMap1: new THREE.TextureLoader().load(
-											"../textures/water/Water_2_M_Normal.jpg"
-										),
-										reflectivity: 0,
-									};
-
-									const geometry = new THREE.BufferGeometry();
-									// tempGeometry.setIndex(child.geometry.index.array);
-									// tempGeometry.setAttribute(
-									// 	"position",
-									// 	new THREE.Float32BufferAttribute(
-									// 		child.geometry.attributes.position.array,
-									// 		3
-									// 	)
-									// );
-									// tempGeometry.setAttribute(
-									// 	"normal",
-									// 	new THREE.Float32BufferAttribute(
-									// 		child.geometry.attributes.normalarray,
-									// 		3
-									// 	)
-									// );
-									// tempGeometry.setAttribute(
-									// 	"uv",
-									// 	new THREE.Float32BufferAttribute(
-									// 		child.geometry.attributes.uv.array,
-									// 		2
-									// 	)
-									// );
-
-									// generate vertices, normals and color data for a simple grid geometry
-
-									const a = 10;
-									const y = 0;
-
-									// const vertices = [-a, y, -a, a, y, -a, -a, y, a, a, y, a];
-									// const normals = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
-
-									const vertices = [-a, a, y, a, a, y, -a, -a, y, a, -a, y];
-									const normals = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
-
-									// generate indices (data for element array buffer)
-
-									const indices = [0, 2, 1, 2, 3, 1];
-									const uvs = [0, 1, 1, 1, 0, 0, 1, 0];
-
-									//
-
-									geometry.setIndex(indices);
-									geometry.setAttribute(
-										"position",
-										new THREE.Float32BufferAttribute(vertices, 3)
-									);
-									geometry.setAttribute(
-										"normal",
-										new THREE.Float32BufferAttribute(normals, 3)
-									);
-									geometry.setAttribute(
-										"uv",
-										new THREE.Float32BufferAttribute(uvs, 2)
-									);
-
-									const water = new Water(child.geometry, param);
-									water.name = "water";
-									// water.position.z = -10;
-
-									// child.parent.add(water);
-
-									const squareShape = new THREE.Shape()
-										.moveTo(0, 0)
-										.lineTo(0, 9)
-										.lineTo(33.852, 9.3378)
-										.lineTo(33.852, 0.03)
-										.lineTo(0, 0);
-									const waterGeometry = new THREE.ShapeGeometry(squareShape);
-									// const waterGeometry = new THREE.PlaneGeometry(20, 20);
-									const test = new Water(waterGeometry, param);
-
-									test.rotation.x = Math.PI * -0.5;
-									test.position.copy(child.position);
-									test.position.y += 0.1;
-									test.name = "water";
-
-									child.parent.add(test);
-									// child.parent.remove(child);
-
-									// child.geometry.dispose();
-									// child.material.dispose();
-								}
-							}
-						});
-
-						// gltf.scene.scale.multiplyScalar(100);
-
-						scene.add(gltf.scene);
-					}
-				);
-
-				// scene.fog = new THREE.Fog(0xaaaaaa, 5000, 100000);
-				// const col = 40;
-				// const row = 40;
-
-				// loader.load("../models/gltf/grass/scene.gltf", (gltf) => {
-				// 	gltf.scene.traverse((child) => {
-				// 		if (child.isMesh) {
-				// 			const defaultTransform = new THREE.Matrix4().makeRotationX(
-				// 				-Math.PI / 2
-				// 			);
-				// 			child.geometry.applyMatrix4(defaultTransform);
-				// 			grass = new THREE.InstancedMesh(
-				// 				child.geometry,
-				// 				child.material,
-				// 				col * row
-				// 			);
-				// 		}
-				// 	});
-
-				// 	const dummy = new THREE.Object3D();
-				// 	for (let i = 0; i < row; i++) {
-				// 		for (let j = 0; j < col; j++) {
-				// 			dummy.position.set(-56 + 0.5 * j, 0.4, -28 + 0.5 * i);
-				// 			dummy.rotation.set(0, Math.random() * Math.PI * 2, 0);
-				// 			dummy.updateMatrix();
-				// 			grass.setMatrixAt(i * col + j, dummy.matrix);
-				// 		}
-				// 	}
-
-				// 	scene.add(grass);
-				// });
-			}
-
-			function onWindowResize() {
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize(window.innerWidth, window.innerHeight);
-			}
-
-			let old;
-			const tempMaterial = new THREE.MeshStandardMaterial({
-				color: 0xffaa00,
-			});
-			function pick(e) {
-				mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-				mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-				raycaster.setFromCamera(mouse, camera);
-
-				const intersects = raycaster.intersectObjects(
-					scene.children[scene.children.length - 1].children,
-					true
-				);
-
-				if (intersects.length > 0) {
-					if (old) {
-						old.mesh.material = old.material;
-					}
-
-					if (intersects[0].object.name === "water") return;
-
-					old = {
-						mesh: intersects[0].object,
-						material: intersects[0].object.material,
-					};
-
-					console.log(old.mesh);
-
-					intersects[0].object.material = tempMaterial;
-					mark.position.copy(intersects[0].point);
-					popupPos.set(mark.position.x, mark.position.y + 1, mark.position.z);
-
-					popup.innerHTML = `${old.mesh.name}<br/>${Math.round(
-						mark.position.x
-					)}, ${Math.round(mark.position.y)}, ${Math.round(mark.position.z)}`;
+			if (intersects.length > 0) {
+				if (old) {
+					old.mesh.material = old.material;
 				}
+
+				if (intersects[0].object.name === "water") return;
+
+				old = {
+					mesh: intersects[0].object,
+					material: intersects[0].object.material,
+				};
+
+				console.log(old.mesh);
+
+				intersects[0].object.material = tempMaterial;
+				mark.position.copy(intersects[0].point);
+				popupPos.set(mark.position.x, mark.position.y + 1, mark.position.z);
+
+				popup.innerHTML = `${old.mesh.name}<br/>${Math.round(
+					mark.position.x
+				)}, ${Math.round(mark.position.y)}, ${Math.round(mark.position.z)}`;
 			}
+		}
 
-			function animate(now) {
-				now *= 0.001;
-				const elapsedTime = Math.min(now - then, 0.1);
-				time += elapsedTime;
-				then = now;
+		function animate(now) {
+			now *= 0.001;
+			const elapsedTime = Math.min(now - then, 0.1);
+			time += elapsedTime;
+			then = now;
 
-				sky.material.uniforms.u_time.value = time;
-				sky.material.uniforms.u_resolution.value = new THREE.Vector2(
-					renderer.domElement.width,
-					renderer.domElement.height
-				);
-				if (now < 1) sky.material.uniforms.u_noise.value = texture;
+			sky.material.uniforms.u_time.value = time;
+			sky.material.uniforms.u_resolution.value = new THREE.Vector2(
+				renderer.domElement.width,
+				renderer.domElement.height
+			);
+			if (now < 1) sky.material.uniforms.u_noise.value = texture;
 
-				renderer.render(scene, camera);
+			renderer.render(scene, camera);
 
-				const newPos = popupPos.clone().project(camera);
-				const x = ((newPos.x + 1) / 2) * window.innerWidth;
-				const y = ((-newPos.y + 1) / 2) * window.innerHeight;
-				popup.style.top = y + "px";
-				popup.style.left = x + "px";
+			const newPos = popupPos.clone().project(camera);
+			const x = ((newPos.x + 1) / 2) * window.innerWidth;
+			const y = ((-newPos.y + 1) / 2) * window.innerHeight;
+			popup.style.top = y + "px";
+			popup.style.left = x + "px";
 
-				requestAnimationFrame(animate);
-			}
-		</script>
-	</body>
+			requestAnimationFrame(animate);
+		}
+	</script>
+</body>
+
 </html>
