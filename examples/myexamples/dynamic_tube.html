@@ -56,15 +56,15 @@
 				);
 				arrowTexture.offset.x = 0;
 				arrowTexture.offset.y = 0.5;
-				arrowTexture.repeat.x = 1;
-				arrowTexture.repeat.y = 1;
+				arrowTexture.repeat.x = 10;
+				arrowTexture.repeat.y = 4;
 				arrowTexture.wrapS = THREE.RepeatWrapping;
 				arrowTexture.wrapT = THREE.RepeatWrapping;
 				setInterval(() => {
-					arrowTexture.offset.x -= 0.0076;
+					arrowTexture.offset.x -= 0.00076;
 				});
-				// mesh = createTube(pathArr);
-				// scene.add(mesh);
+				mesh = createTube(pathArr, arrowTexture);
+				scene.add(mesh);
 
 				renderer = new THREE.WebGLRenderer({ antialias: true });
 				renderer.setPixelRatio(window.devicePixelRatio);
@@ -84,7 +84,7 @@
 							if (child.type === "LineSegments") {
 								const mesh = createTube(
 									child.geometry.attributes.position.array,
-									null,
+									arrowTexture,
 									0.1
 								);
 								scene.add(mesh);
