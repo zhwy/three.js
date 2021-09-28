@@ -1,6 +1,7 @@
 import alphamap_fragment from './ShaderChunk/alphamap_fragment.glsl.js';
 import alphamap_pars_fragment from './ShaderChunk/alphamap_pars_fragment.glsl.js';
 import alphatest_fragment from './ShaderChunk/alphatest_fragment.glsl.js';
+import alphatest_pars_fragment from './ShaderChunk/alphatest_pars_fragment.glsl.js';
 import aomap_fragment from './ShaderChunk/aomap_fragment.glsl.js';
 import aomap_pars_fragment from './ShaderChunk/aomap_pars_fragment.glsl.js';
 import begin_vertex from './ShaderChunk/begin_vertex.glsl.js';
@@ -63,10 +64,14 @@ import morphtarget_pars_vertex from './ShaderChunk/morphtarget_pars_vertex.glsl.
 import morphtarget_vertex from './ShaderChunk/morphtarget_vertex.glsl.js';
 import normal_fragment_begin from './ShaderChunk/normal_fragment_begin.glsl.js';
 import normal_fragment_maps from './ShaderChunk/normal_fragment_maps.glsl.js';
+import normal_pars_fragment from './ShaderChunk/normal_pars_fragment.glsl.js';
+import normal_pars_vertex from './ShaderChunk/normal_pars_vertex.glsl.js';
+import normal_vertex from './ShaderChunk/normal_vertex.glsl.js';
 import normalmap_pars_fragment from './ShaderChunk/normalmap_pars_fragment.glsl.js';
 import clearcoat_normal_fragment_begin from './ShaderChunk/clearcoat_normal_fragment_begin.glsl.js';
 import clearcoat_normal_fragment_maps from './ShaderChunk/clearcoat_normal_fragment_maps.glsl.js';
 import clearcoat_pars_fragment from './ShaderChunk/clearcoat_pars_fragment.glsl.js';
+import output_fragment from './ShaderChunk/output_fragment.glsl.js';
 import packing from './ShaderChunk/packing.glsl.js';
 import premultiplied_alpha_fragment from './ShaderChunk/premultiplied_alpha_fragment.glsl.js';
 import project_vertex from './ShaderChunk/project_vertex.glsl.js';
@@ -114,14 +119,14 @@ import meshlambert_frag from './ShaderLib/meshlambert_frag.glsl.js';
 import meshlambert_vert from './ShaderLib/meshlambert_vert.glsl.js';
 import meshmatcap_frag from './ShaderLib/meshmatcap_frag.glsl.js';
 import meshmatcap_vert from './ShaderLib/meshmatcap_vert.glsl.js';
-import meshtoon_frag from './ShaderLib/meshtoon_frag.glsl.js';
-import meshtoon_vert from './ShaderLib/meshtoon_vert.glsl.js';
+import meshnormal_frag from './ShaderLib/meshnormal_frag.glsl.js';
+import meshnormal_vert from './ShaderLib/meshnormal_vert.glsl.js';
 import meshphong_frag from './ShaderLib/meshphong_frag.glsl.js';
 import meshphong_vert from './ShaderLib/meshphong_vert.glsl.js';
 import meshphysical_frag from './ShaderLib/meshphysical_frag.glsl.js';
 import meshphysical_vert from './ShaderLib/meshphysical_vert.glsl.js';
-import normal_frag from './ShaderLib/normal_frag.glsl.js';
-import normal_vert from './ShaderLib/normal_vert.glsl.js';
+import meshtoon_frag from './ShaderLib/meshtoon_frag.glsl.js';
+import meshtoon_vert from './ShaderLib/meshtoon_vert.glsl.js';
 import points_frag from './ShaderLib/points_frag.glsl.js';
 import points_vert from './ShaderLib/points_vert.glsl.js';
 import shadow_frag from './ShaderLib/shadow_frag.glsl.js';
@@ -133,6 +138,7 @@ export const ShaderChunk = {
 	alphamap_fragment: alphamap_fragment,
 	alphamap_pars_fragment: alphamap_pars_fragment,
 	alphatest_fragment: alphatest_fragment,
+	alphatest_pars_fragment: alphatest_pars_fragment,
 	aomap_fragment: aomap_fragment,
 	aomap_pars_fragment: aomap_pars_fragment,
 	begin_vertex: begin_vertex,
@@ -195,10 +201,14 @@ export const ShaderChunk = {
 	morphtarget_vertex: morphtarget_vertex,
 	normal_fragment_begin: normal_fragment_begin,
 	normal_fragment_maps: normal_fragment_maps,
+	normal_pars_fragment: normal_pars_fragment,
+	normal_pars_vertex: normal_pars_vertex,
+	normal_vertex: normal_vertex,
 	normalmap_pars_fragment: normalmap_pars_fragment,
 	clearcoat_normal_fragment_begin: clearcoat_normal_fragment_begin,
 	clearcoat_normal_fragment_maps: clearcoat_normal_fragment_maps,
 	clearcoat_pars_fragment: clearcoat_pars_fragment,
+	output_fragment: output_fragment,
 	packing: packing,
 	premultiplied_alpha_fragment: premultiplied_alpha_fragment,
 	project_vertex: project_vertex,
@@ -246,14 +256,14 @@ export const ShaderChunk = {
 	meshlambert_vert: meshlambert_vert,
 	meshmatcap_frag: meshmatcap_frag,
 	meshmatcap_vert: meshmatcap_vert,
-	meshtoon_frag: meshtoon_frag,
-	meshtoon_vert: meshtoon_vert,
+	meshnormal_frag: meshnormal_frag,
+	meshnormal_vert: meshnormal_vert,
 	meshphong_frag: meshphong_frag,
 	meshphong_vert: meshphong_vert,
 	meshphysical_frag: meshphysical_frag,
 	meshphysical_vert: meshphysical_vert,
-	normal_frag: normal_frag,
-	normal_vert: normal_vert,
+	meshtoon_frag: meshtoon_frag,
+	meshtoon_vert: meshtoon_vert,
 	points_frag: points_frag,
 	points_vert: points_vert,
 	shadow_frag: shadow_frag,

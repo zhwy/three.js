@@ -139,6 +139,12 @@ function WebGLMaterials( properties ) {
 
 		}
 
+		if ( material.alphaTest > 0 ) {
+
+			uniforms.alphaTest.value = material.alphaTest;
+
+		}
+
 		const envMap = properties.get( material ).envMap;
 
 		if ( envMap ) {
@@ -148,6 +154,7 @@ function WebGLMaterials( properties ) {
 			uniforms.flipEnvMap.value = ( envMap.isCubeTexture && envMap.isRenderTargetTexture === false ) ? - 1 : 1;
 
 			uniforms.reflectivity.value = material.reflectivity;
+			uniforms.ior.value = material.ior;
 			uniforms.refractionRatio.value = material.refractionRatio;
 
 			const maxMipLevel = properties.get( envMap ).__maxMipLevel;
@@ -189,6 +196,8 @@ function WebGLMaterials( properties ) {
 		// 12. clearcoat roughnessMap map
 		// 13. specular intensity map
 		// 14. specular tint map
+		// 15. transmission map
+		// 16. thickness map
 
 		let uvScaleMap;
 
@@ -247,6 +256,14 @@ function WebGLMaterials( properties ) {
 		} else if ( material.specularTintMap ) {
 
 			uvScaleMap = material.specularTintMap;
+
+		} else if ( material.transmissionMap ) {
+
+			uvScaleMap = material.transmissionMap;
+
+		} else if ( material.thicknessMap ) {
+
+			uvScaleMap = material.thicknessMap;
 
 		}
 
@@ -340,6 +357,12 @@ function WebGLMaterials( properties ) {
 
 		}
 
+		if ( material.alphaTest > 0 ) {
+
+			uniforms.alphaTest.value = material.alphaTest;
+
+		}
+
 		// uv repeat and offset setting priorities
 		// 1. color map
 		// 2. alpha map
@@ -385,6 +408,12 @@ function WebGLMaterials( properties ) {
 		if ( material.alphaMap ) {
 
 			uniforms.alphaMap.value = material.alphaMap;
+
+		}
+
+		if ( material.alphaTest > 0 ) {
+
+			uniforms.alphaTest.value = material.alphaTest;
 
 		}
 
@@ -567,63 +596,66 @@ function WebGLMaterials( properties ) {
 
 		refreshUniformsStandard( uniforms, material );
 
-		uniforms.reflectivity.value = material.reflectivity; // also part of uniforms common
+		uniforms.ior.value = material.ior; // also part of uniforms common
 
-		uniforms.clearcoat.value = material.clearcoat;
-		uniforms.clearcoatRoughness.value = material.clearcoatRoughness;
+		if ( material.sheenTint ) uniforms.sheenTint.value.copy( material.sheenTint );
 
-		if ( material.sheen ) uniforms.sheen.value.copy( material.sheen );
+		if ( material.clearcoat > 0 ) {
 
-		if ( material.clearcoatMap ) {
+			uniforms.clearcoat.value = material.clearcoat;
+			uniforms.clearcoatRoughness.value = material.clearcoatRoughness;
 
-			uniforms.clearcoatMap.value = material.clearcoatMap;
+			if ( material.clearcoatMap ) {
 
-		}
+				uniforms.clearcoatMap.value = material.clearcoatMap;
 
-		if ( material.clearcoatRoughnessMap ) {
+			}
 
-			uniforms.clearcoatRoughnessMap.value = material.clearcoatRoughnessMap;
+			if ( material.clearcoatRoughnessMap ) {
 
-		}
+				uniforms.clearcoatRoughnessMap.value = material.clearcoatRoughnessMap;
 
-		if ( material.clearcoatNormalMap ) {
+			}
 
-			uniforms.clearcoatNormalScale.value.copy( material.clearcoatNormalScale );
-			uniforms.clearcoatNormalMap.value = material.clearcoatNormalMap;
+			if ( material.clearcoatNormalMap ) {
 
-			if ( material.side === BackSide ) {
+				uniforms.clearcoatNormalScale.value.copy( material.clearcoatNormalScale );
+				uniforms.clearcoatNormalMap.value = material.clearcoatNormalMap;
 
-				uniforms.clearcoatNormalScale.value.negate();
+				if ( material.side === BackSide ) {
+
+					uniforms.clearcoatNormalScale.value.negate();
+
+				}
 
 			}
 
 		}
 
-		uniforms.transmission.value = material.transmission;
+		if ( material.transmission > 0 ) {
 
-		if ( material.transmissionMap ) {
-
-			uniforms.transmissionMap.value = material.transmissionMap;
-
-		}
-
-		if ( material.transmission > 0.0 ) {
-
+			uniforms.transmission.value = material.transmission;
 			uniforms.transmissionSamplerMap.value = transmissionRenderTarget.texture;
 			uniforms.transmissionSamplerSize.value.set( transmissionRenderTarget.width, transmissionRenderTarget.height );
 
+			if ( material.transmissionMap ) {
+
+				uniforms.transmissionMap.value = material.transmissionMap;
+
+			}
+
+			uniforms.thickness.value = material.thickness;
+
+			if ( material.thicknessMap ) {
+
+				uniforms.thicknessMap.value = material.thicknessMap;
+
+			}
+
+			uniforms.attenuationDistance.value = material.attenuationDistance;
+			uniforms.attenuationTint.value.copy( material.attenuationTint );
+
 		}
-
-		uniforms.thickness.value = material.thickness;
-
-		if ( material.thicknessMap ) {
-
-			uniforms.thicknessMap.value = material.thicknessMap;
-
-		}
-
-		uniforms.attenuationDistance.value = material.attenuationDistance;
-		uniforms.attenuationTint.value.copy( material.attenuationTint );
 
 		uniforms.specularIntensity.value = material.specularIntensity;
 		uniforms.specularTint.value.copy( material.specularTint );

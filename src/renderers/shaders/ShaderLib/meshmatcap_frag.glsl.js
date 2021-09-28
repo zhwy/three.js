@@ -7,27 +7,15 @@ uniform sampler2D matcap;
 
 varying vec3 vViewPosition;
 
-#ifndef FLAT_SHADED
-
-	varying vec3 vNormal;
-
-	#ifdef USE_TANGENT
-
-		varying vec3 vTangent;
-		varying vec3 vBitangent;
-
-	#endif
-
-#endif
-
 #include <common>
 #include <dithering_pars_fragment>
 #include <color_pars_fragment>
 #include <uv_pars_fragment>
 #include <map_pars_fragment>
 #include <alphamap_pars_fragment>
-
+#include <alphatest_pars_fragment>
 #include <fog_pars_fragment>
+#include <normal_pars_fragment>
 #include <bumpmap_pars_fragment>
 #include <normalmap_pars_fragment>
 #include <logdepthbuf_pars_fragment>
@@ -65,8 +53,7 @@ void main() {
 
 	vec3 outgoingLight = diffuseColor.rgb * matcapColor.rgb;
 
-	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
-
+	#include <output_fragment>
 	#include <tonemapping_fragment>
 	#include <encodings_fragment>
 	#include <fog_fragment>
