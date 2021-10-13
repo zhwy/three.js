@@ -158,6 +158,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // vec3 col = mix(vec3(0.5, 0.5, 0.5), vec3(0.03, 0.1, 0.94), p.y * 0.5 + 0.5);
 	// vec3 col = mix(vec3(0.5, 0.5, 0.5), vec3(0.,0.,1.), p.y * 0.5 + 0.5);
   vec3 col = vec3(0.03, 0.1, 0.94);
+  // vec3 col = vec3(0, 0, 1);
 	// sun color
 	// col += 0.5 * vec3(1.0, 1., 0.8) * pow(sun, 8.0);
 
@@ -206,6 +207,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec3 retColor = pow(texColor, vec3(1.0 / (1.2 + (1.2 * vSunfade))));
 
   fragColor = vec4(retColor, 1.0);
+  // fragColor = vec4(texColor, 1.);
   // fragColor = vec4( col, 1.0 );
 
 }
