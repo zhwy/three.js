@@ -5,7 +5,8 @@
     "myexamples/test_dragLoad",
     "myexamples/test_cloudySky",
     "myexamples/test_attenuationMaterial",
-    "myexamples/test_waterTest"
+    "myexamples/test_waterTest",
+    "myexamples/test_textureCanvas"
   ],
   "webgl": [
     "webgl_animation_cloth",
