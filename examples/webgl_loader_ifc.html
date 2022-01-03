@@ -61,8 +61,8 @@
 			//Setup IFC Loader
 			const ifcLoader = new IFCLoader();
 			ifcLoader.ifcManager.setWasmPath('jsm/loaders/ifc/');
-			ifcLoader.load('models/ifc/rac_advanced_sample_project.ifc', function (model) {
-			// ifcLoader.load('models/ifc/bridge.ifc', function (model) {
+			ifcLoader.load('models/ifc/rac_advanced_sample_project.ifc', function(model) {
+				// ifcLoader.load('models/ifc/bridge.ifc', function (model) {
 				scene.add(model.mesh);
 				render();
 
@@ -111,27 +111,28 @@
 			const controls = new OrbitControls(camera, renderer.domElement);
 			controls.addEventListener('change', render);
 
-			window.addEventListener('resize', onWindowResize);
+			const intersected = raycaster.intersectObjects(scene.children, false);
+			if (intersected.length) {
 
-			render();
+				render();
 
-		}
+			}
 
-		function onWindowResize() {
+			function onWindowResize() {
 
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-			renderer.setSize(window.innerWidth, window.innerHeight);
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
 
-			render();
+				render();
 
-		}
+			}
 
-		function render() {
+			function render() {
 
-			renderer.render(scene, camera);
+				renderer.render(scene, camera);
 
-		}
+			}
 
 	</script>
 </body>

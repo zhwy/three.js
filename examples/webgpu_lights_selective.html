@@ -5,6 +5,8 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
+		<!-- WebGPU (For Chrome 94-97), expires 10/11/2021 -->
+		<meta http-equiv="origin-trial" content="Agfr4hEaaoH1kaTtGTZY4OU2lQQOv+gWq+8rYeHZBPWNnLww/smePFCIJOUdRFnQZkO3KAio+SNJapjzaoyFfQQAAABLeyJvcmlnaW4iOiJodHRwczovL3RocmVlanMub3JnOjQ0MyIsImZlYXR1cmUiOiJXZWJHUFUiLCJleHBpcnkiOjE2NDMxNTUxOTl9">
 	</head>
 	<body>
 
@@ -35,9 +37,7 @@
 			import WebGPURenderer from './jsm/renderers/webgpu/WebGPURenderer.js';
 			import WebGPU from './jsm/renderers/webgpu/WebGPU.js';
 
-			import LightsNode from './jsm/renderers/nodes/lights/LightsNode.js';
-			import TextureNode from './jsm/renderers/nodes/inputs/TextureNode.js';
-			import NormalMapNode from './jsm/renderers/nodes/display/NormalMapNode.js';
+			import * as Nodes from './jsm/renderers/nodes/Nodes.js';
 
 			let camera, scene, renderer,
 				light1, light2, light3, light4,
@@ -94,30 +94,30 @@
 
 				//light nodes ( selective lights )
 
-				const allLightsNode = LightsNode.fromLights( [ light1, light2, light3, light4 ] );
-				const redLightNode = LightsNode.fromLights( [ light1 ] );
-				const blueLightNode = LightsNode.fromLights( [ light2 ] );
+				const allLightsNode = Nodes.LightsNode.fromLights( [ light1, light2, light3, light4 ] );
+				const redLightNode = Nodes.LightsNode.fromLights( [ light1 ] );
+				const blueLightNode = Nodes.LightsNode.fromLights( [ light2 ] );
 
 				//models
 
 				const geometryTeapot = new TeapotGeometry( 8, 18 );
 
-				const leftObject = new THREE.Mesh( geometryTeapot, new THREE.MeshStandardMaterial( { color: 0x555555 } ) );
+				const leftObject = new THREE.Mesh( geometryTeapot, new Nodes.MeshStandardNodeMaterial( { color: 0x555555 } ) );
 				leftObject.material.lightNode = redLightNode;
-				leftObject.material.roughnessNode = new TextureNode( alphaTexture );
+				leftObject.material.roughnessNode = new Nodes.TextureNode( alphaTexture );
 				leftObject.material.metalness = 0;
 				leftObject.position.x = - 30;
 				scene.add( leftObject );
 
-				const centerObject = new THREE.Mesh( geometryTeapot, new THREE.MeshStandardMaterial( { color: 0x555555 } ) );
+				const centerObject = new THREE.Mesh( geometryTeapot, new Nodes.MeshStandardNodeMaterial( { color: 0x555555 } ) );
 				centerObject.material.lightNode = allLightsNode;
-				centerObject.material.normalNode = new NormalMapNode( new TextureNode( normalMapTexture ) );
+				centerObject.material.normalNode = new Nodes.NormalMapNode( new Nodes.TextureNode( normalMapTexture ) );
 				centerObject.material.roughness = .5;
 				scene.add( centerObject );
 
-				const rightObject = new THREE.Mesh( geometryTeapot, new THREE.MeshStandardMaterial( { color: 0x555555 } ) );
+				const rightObject = new THREE.Mesh( geometryTeapot, new Nodes.MeshStandardNodeMaterial( { color: 0x555555 } ) );
 				rightObject.material.lightNode = blueLightNode;
-				rightObject.material.metalnessNode = new TextureNode( alphaTexture );
+				rightObject.material.metalnessNode = new Nodes.TextureNode( alphaTexture );
 				rightObject.position.x = 30;
 				scene.add( rightObject );
 
