@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js - water</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+	<link type="text/css" rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+	<div id="container"></div>
+	<div id="info">
+		<a href="https://threejs.org" target="_blank" rel="noopener noreferrer">three.js</a>
+		- water
+	</div>
+
+	<script type="module">
+		import * as THREE from "../../build/three.module.js";
+
+		import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+
+		let scene, camera, renderer;
+
+		init();
+		animate();
+
+		function init() {
+			// scene
+
+			scene = new THREE.Scene();
+
+			// camera
+
+			camera = new THREE.PerspectiveCamera(
+				45,
+				window.innerWidth / window.innerHeight,
+				0.1,
+				200
+			);
+			camera.position.set(0, 7, 25);
+			camera.lookAt(scene.position);
+
+			// renderer
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setPixelRatio(window.devicePixelRatio);
+			document.body.appendChild(renderer.domElement);
+
+			// mesh
+
+			const torusKnotGeometry = new THREE.TorusKnotGeometry(3, 1, 256, 32);
+			const torusKnotMaterial = new THREE.MeshNormalMaterial();
+
+			const torusKnot = new THREE.Mesh(torusKnotGeometry, torusKnotMaterial);
+			torusKnot.position.y = 4;
+			torusKnot.scale.set(0.5, 0.5, 0.5);
+			scene.add(torusKnot);
+
+			// ground
+
+			const groundGeometry = new THREE.PlaneGeometry(20, 20);
+			const groundMaterial = new THREE.MeshStandardMaterial({
+				roughness: 0.8,
+				metalness: 0.4,
+			});
+			const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+			ground.rotation.x = Math.PI * -0.5;
+			scene.add(ground);
+
+			const controls = new OrbitControls(camera, renderer.domElement);
+			controls.minDistance = 5;
+			controls.maxDistance = 50;
+
+			//
+
+			window.addEventListener("resize", onWindowResize);
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			render();
+		}
+
+		function render() {
+			renderer.render(scene, camera);
+		}
+	</script>
+</body>
+
+</html>

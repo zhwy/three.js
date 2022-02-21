@@ -6,7 +6,8 @@
     "myexamples/test_cloudySky",
     "myexamples/test_attenuationMaterial",
     "myexamples/test_waterTest",
-    "myexamples/test_textureCanvas"
+    "myexamples/test_textureCanvas",
+    "myexamples/test_measure"
   ],
   "webgl": [
     "webgl_animation_keyframes",
