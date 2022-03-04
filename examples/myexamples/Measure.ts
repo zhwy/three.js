@@ -1,14 +1,13 @@
 import * as THREE from '../../build/three.module.js';
-import { DragControls } from '../jsm/controls/DragControls';
-import { OrbitControls } from '../jsm/controls/OrbitControls';
-import { Font } from '../jsm/loaders/FontLoader';
-import { TextGeometry } from '../jsm/geometries/TextGeometry';
+import { CSS2DRenderer, CSS2DObject } from '../jsm/renderers/CSS2DRenderer.js';
 
 export enum MeasureMode {
 	Distance = 'Distance',
 	Area = 'Area',
 	Angle = 'Angle'
 }
+
+const pointTexture = new THREE.TextureLoader().load('./circle.png');
 
 /**
  * Measure class
@@ -18,49 +17,46 @@ export default class Measure {
 	// https://github.com/mrdoob/three.js/issues/269
 	// line color: 0x87cefa, point color: 0x74e0d0
 	readonly LINE_MATERIAL = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3, opacity: 0.8, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
-	readonly POINT_MATERIAL = new THREE.PointsMaterial({ color: 0xff5000, size: 1, opacity: 0.6, transparent: true, depthWrite: false, depthTest: false });
+	readonly POINT_MATERIAL = new THREE.PointsMaterial({ color: 0xff5000, map: pointTexture, size: 10, sizeAttenuation: false, transparent: true, depthWrite: false, depthTest: false });
 	readonly MESH_MATERIAL = new THREE.MeshBasicMaterial({ color: 0x87cefa, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
+	readonly MOUSE_MATERIAL = new THREE.PointsMaterial({ color: 0xffff00, map: pointTexture, size: 10, sizeAttenuation: false, transparent: true, depthWrite: false, depthTest: false });
 	readonly MAX_POINTS = 100; // TODO: better to remove this limitation
 	readonly MAX_DISTANCE = 500; // when intersected object's distance is too far away, then ignore it
 	readonly OBJ_NAME = 'object_for_measure';
 	readonly LABEL_NAME = 'label_for_measure';
+	readonly MOUSE_NAME = 'point_for_mouse';
 
 	mode: MeasureMode;
 	renderer: THREE.WebGLRenderer;
+	css2dRenderer: CSS2DRenderer;
 	scene: THREE.Scene;
 	camera: THREE.Camera;
-	controls: OrbitControls;
-	dragControls?: DragControls; // enable objects(labels) to be dragged
 	raycaster?: THREE.Raycaster;
-	font?: Font;
 	mouseMoved = false;
 	isCompleted = false;
 	points?: THREE.Points; // used for measure distance and area
 	polyline?: THREE.Line; // the line user draws while measuring distance
 	faces?: THREE.Mesh; // the faces user draws while measuring area
 	curve?: THREE.Line; // the arc curve to indicate the angle in degree
-	tempPoints?: THREE.Points; // used to store temporary Points
+	mousePoint: THREE.Points; // used to store temporary Points
 	tempLine?: THREE.Line; // used to store temporary line, which is useful for drawing line as mouse moves
 	tempLineForArea?: THREE.Line; // used to store temporary line, which is useful for drawing area as mouse moves
-	tempLabel?: THREE.Mesh; // used to store temporary label as mouse moves
 	pointCount = 0; // used to store how many points user have been picked
 	pointArray: THREE.Vector3[] = [];
-	fontSize?: number = 0; // used to dymanically calculate a font size
 	tempFontSize?: number = 0; // used to dymanically calculate a font size
 	lastClickTime?: number; // save the last click time, in order to detect double click event
+	label?: CSS2DObject;
 
-	constructor(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, controls: OrbitControls, mode: MeasureMode = MeasureMode.Distance) {
+	constructor(renderer: THREE.WebGLRenderer, css2dRenderer: CSS2DRenderer, scene: THREE.Scene, camera: THREE.Camera, mode: MeasureMode = MeasureMode.Distance) {
 		this.mode = mode;
 		this.renderer = renderer;
 		this.scene = scene;
 		this.camera = camera;
-		this.controls = controls;
-		this.loadFont();
-		this.initDragControls();
+		this.css2dRenderer = css2dRenderer;
 	}
 
-	get canvas(): HTMLCanvasElement {
-		return this.renderer.domElement as HTMLCanvasElement;
+	get canvas(): HTMLDivElement {
+		return this.css2dRenderer.domElement as HTMLDivElement;
 	}
 
 	/**
@@ -89,7 +85,9 @@ export default class Measure {
 		}
 		this.isCompleted = false;
 		this.renderer.domElement.style.cursor = 'crosshair';
-		this.fontSize = 0;
+
+		this.mousePoint = this.createPoints(1, this.MOUSE_NAME, this.MOUSE_MATERIAL);
+		this.scene.add(this.mousePoint);
 	}
 
 	/**
@@ -102,7 +100,7 @@ export default class Measure {
 		this.canvas.removeEventListener('dblclick', this.dblclick);
 		window.removeEventListener('keydown', this.keydown);
 
-		this.tempPoints && this.scene.remove(this.tempPoints);
+		this.mousePoint && this.scene.remove(this.mousePoint);
 		this.tempLine && this.scene.remove(this.tempLine);
 		this.tempLineForArea && this.scene.remove(this.tempLineForArea);
 		this.points && this.scene.remove(this.points);
@@ -111,26 +109,24 @@ export default class Measure {
 		this.curve && this.scene.remove(this.curve);
 		this.pointArray = [];
 		this.raycaster = undefined;
-		this.tempPoints = undefined;
+		this.mousePoint = undefined;
 		this.tempLine = undefined;
 		this.tempLineForArea = undefined;
 		this.points = undefined;
 		this.polyline = undefined;
-		this.fontSize = 0;
 		this.renderer.domElement.style.cursor = '';
-		this.clearDraggableObjects();
 	}
 
 	/**
 	 * Creates THREE.Points
 	 */
-	private createPoints(pointCount = this.MAX_POINTS): THREE.Points {
+	private createPoints(pointCount = this.MAX_POINTS, name = this.OBJ_NAME, material = this.POINT_MATERIAL): THREE.Points {
 		const geom = new THREE.BufferGeometry();
-		const pos = new Float32Array(this.MAX_POINTS * 3); // 3 vertices per point
+		const pos = new Float32Array(pointCount * 3); // 3 vertices per point
 		geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); // the attribute name cannot be 'positions'!
 		geom.setDrawRange(0, 0); // do not draw anything yet, otherwise it may draw a point by default
-		const obj = new THREE.Points(geom, this.POINT_MATERIAL);
-		obj.name = this.OBJ_NAME;
+		const obj = new THREE.Points(geom, material);
+		obj.name = name;
 		return obj;
 	}
 
@@ -184,11 +180,11 @@ export default class Measure {
 					pos.needsUpdate = true;
 				}
 				const area = this.calculateArea(this.pointArray);
-				const label = `${this.numberToString(area)} ${this.getUnitString()}`;
+				const text = `${this.numberToString(area)} ${this.getUnitString()}`;
 				const distance = p1.distanceTo(p0);
 				const d = distance * 0.4; // distance from label to p0
 				const position = p0.clone().add(new THREE.Vector3(dir1.x * d, dir1.y * d, dir1.z * d));
-				this.addOrUpdateLabel(this.polyline, label, position, dir1, distance);
+				this.updateLabel(this.polyline, text, position);
 			} else {
 				clearPoints = true;
 				clearPolyline = true;
@@ -208,11 +204,11 @@ export default class Measure {
 				const dir1 = this.getAngleBisector(p0, p1, p2);
 				const dir2 = new THREE.Vector3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z).normalize();
 				const angle = this.calculateAngle(p0, p1, p2);
-				const label = `${this.numberToString(angle)} ${this.getUnitString()}`;
+				const text = `${this.numberToString(angle)} ${this.getUnitString()}`;
 				const distance = Math.min(p0.distanceTo(p1), p2.distanceTo(p1));
 				const d = distance * 0.2; // distance from label to p1
 				const position = p1.clone().add(new THREE.Vector3(dir1.x * d, dir1.y * d, dir1.z * d));
-				this.addOrUpdateLabel(this.polyline, label, position, dir1, distance);
+				this.updateLabel(this.polyline, text, position);
 
 				const arcP0 = p1.clone().add(new THREE.Vector3(dir0.x * d, dir0.y * d, dir0.z * d));
 				const arcP2 = p1.clone().add(new THREE.Vector3(dir2.x * d, dir2.y * d, dir2.z * d));
@@ -232,20 +228,11 @@ export default class Measure {
 			this.scene.remove(this.polyline);
 			this.polyline = undefined;
 		}
-		// make labels draggable
-		if (this.polyline) {
-			this.polyline.traverse(object => {
-				if (object.name === this.LABEL_NAME) {
-					this.addDraggableObjects(object);
-				}
-			});
-		}
 		this.isCompleted = true;
 		this.renderer.domElement.style.cursor = '';
-		this.tempPoints && this.scene.remove(this.tempPoints);
+		this.mousePoint && this.scene.remove(this.mousePoint);
 		this.tempLine && this.scene.remove(this.tempLine);
 		this.tempLineForArea && this.scene.remove(this.tempLineForArea);
-		this.fontSize = 0;
 	}
 
 	/**
@@ -267,9 +254,8 @@ export default class Measure {
 			return;
 		}
 
-		// draw the temp point as mouse moves
-		const points = this.tempPoints || this.createPoints(1);
-		const geom = points.geometry as any;
+		// update the mouse point
+		const geom = this.mousePoint.geometry as any;
 		const pos = (geom.attributes && geom.attributes.position) || undefined;
 		if (pos) {
 			let i = 0;
@@ -278,10 +264,6 @@ export default class Measure {
 			pos.array[i++] = point.z;
 			geom.setDrawRange(0, 1);
 			pos.needsUpdate = true;
-		}
-		if (!this.tempPoints) {
-			this.scene.add(points); // just add to scene once
-			this.tempPoints = points;
 		}
 
 		// store the first point into tempLine
@@ -317,10 +299,9 @@ export default class Measure {
 			}
 			if (this.mode === MeasureMode.Distance) {
 				const dist = p0.distanceTo(point);
-				const label = `${this.numberToString(dist)} ${this.getUnitString()}`; // hard code unit to 'm' here
+				const text = `${this.numberToString(dist)} ${this.getUnitString()}`; // hard code unit to 'm' here
 				const position = new THREE.Vector3((point.x + p0.x) / 2, (point.y + p0.y) / 2, (point.z + p0.z) / 2);
-				const direction = new THREE.Vector3(point.x - p0.x, point.y - p0.y, point.z - p0.z).normalize();
-				this.addOrUpdateLabel(line, label, position, direction, point.distanceTo(p0));
+				this.updateLabel(line, text, position);
 			}
 			if (!this.tempLine) {
 				this.scene.add(line); // just add to scene once
@@ -381,13 +362,6 @@ export default class Measure {
 				pos.array[i + 2] = point.z;
 				geom.setDrawRange(0, count + 1);
 				pos.needsUpdate = true;
-				if (this.tempLabel) {
-					// also add text for the line
-					this.polyline.add(this.tempLabel);
-				}
-				if (this.fontSize === 0) {
-					this.fontSize = this.tempFontSize;
-				}
 			} else {
 				console.error('Failed to get attributes.position, or number of points exceeded MAX_POINTS!');
 			}
@@ -443,71 +417,26 @@ export default class Measure {
 	};
 
 	/**
-	 * Loads font
-	 */
-	loadFont() {
-		// should be able to load font from threejs' folder, don't know how...
-		new THREE.FontLoader().load('three/fonts/helvetiker_regular.typeface.json', (font) => {
-			this.font = font;
-		});
-	}
-
-	/**
 	 * Adds or update label
 	 */
-	addOrUpdateLabel(obj: THREE.Object3D, label: string, position: THREE.Vector3, direction: THREE.Vector3, distance: number) {
-		if (!this.font) {
-			console.warn('Font is not loaded yet!');
-			return;
+	updateLabel(obj: THREE.Object3D, text: string, position: THREE.Vector3) {
+		if (this.label) {
+			this.label.position.copy(position);
+		} else {
+			const element = document.createElement('div');
+			element.textContent = text;
+			Object.assign(element.style, {
+				fontSize: '15px',
+				color: 'red',
+				backgroundColor: 'rgba(255,255,255,0.5)',
+				padding: '10px',
+			})
+			const label = new CSS2DObject(element);
+			label.position.copy(position);
+			obj.add(label);
+			this.label = label;
 		}
-		if (this.tempLabel) {
-			// we have to remvoe the old text and create a new one, threejs doesn't support to change it dynamically
-			obj.remove(this.tempLabel);
-		}
-		// make font size between 0.5 - 5
-		// And, once font size is settled, all labels should have the same size
-		let fontSize = this.fontSize;
-		if (fontSize === 0) {
-			fontSize = distance / 40;
-			fontSize = Math.max(0.5, fontSize);
-			fontSize = Math.min(5, fontSize);
-			this.tempFontSize = fontSize;
-		}
-		this.tempLabel = this.createLabel(this.font, label, fontSize);
-		const axisX = new THREE.Vector3(1, 0, 0);
-		const axisY = new THREE.Vector3(0, 1, 0);
-		const dirXZ = direction.clone().setY(0); // direction on XZ plane
-		let angle = dirXZ.angleTo(axisX); // in XZ plane, the angle to x-axis
-		if (dirXZ.z > 0) {
-			angle = -angle;
-		}
-		this.tempLabel.rotateOnAxis(axisY, angle);
-		this.tempLabel.position.set(position.x, position.y, position.z);
-		obj.add(this.tempLabel);
-	}
 
-	/**
-	 * Creates label with proper style
-	 */
-	createLabel(font: Font, label: string, size?: number) {
-		const textGeom = new TextGeometry(label, {
-			font: font,
-			size: size,
-			height: (size || 0) / 3,
-			curveSegments: 1,
-			bevelEnabled: false,
-			bevelThickness: 0,
-			bevelSize: 0,
-			bevelSegments: 1
-		});
-		const textMat = new THREE.MeshBasicMaterial({
-			flatShading: false,
-			transparent: true,
-			opacity: 0.6
-		});
-		const obj = new THREE.Mesh(textGeom, textMat);
-		obj.name = this.LABEL_NAME;
-		return obj;
 	}
 
 	/**
@@ -588,30 +517,5 @@ export default class Measure {
 			fractionDigits = 3;
 		}
 		return num.toFixed(fractionDigits);
-	}
-
-	/**
-	 * Initialize drag control
-	 * Enables user to drag the label in case it is blocked by other objects
-	 */
-	initDragControls() {
-		const dc = new DragControls([], this.camera, this.renderer.domElement);
-		dc.addEventListener('dragstart', (event) => { this.controls.enabled = false; });
-		// dragControls.addEventListener('drag', (event) => { console.log('dragging') })
-		dc.addEventListener('dragend', (event) => { this.controls.enabled = true; });
-		this.dragControls = dc;
-	}
-
-	addDraggableObjects(objects: THREE.Object3D) {
-		if (this.dragControls) {
-			this.dragControls.getObjects().push(objects);
-		}
-	}
-
-	clearDraggableObjects() {
-		if (this.dragControls) {
-			const objects = this.dragControls.getObjects();
-			objects.splice(0, objects.length);
-		}
 	}
 }
