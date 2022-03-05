@@ -16,80 +16,78 @@ export default class Measure {
         // https://github.com/mrdoob/three.js/issues/269
         // line color: 0x87cefa, point color: 0x74e0d0
         this.LINE_MATERIAL = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 3, opacity: 0.8, transparent: true, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
-        this.POINT_MATERIAL = new THREE.PointsMaterial({ color: 0xff5000, map: pointTexture, size: 10, sizeAttenuation: false, transparent: true, depthWrite: false, depthTest: false });
+        this.POINT_MATERIAL = new THREE.PointsMaterial({ color: 0x00ff00, map: pointTexture, size: 5, sizeAttenuation: false, transparent: true, depthWrite: false, depthTest: false });
         this.MESH_MATERIAL = new THREE.MeshBasicMaterial({ color: 0x87cefa, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
-        this.MOUSE_MATERIAL = new THREE.PointsMaterial({ color: 0xffff00, map: pointTexture, size: 10, sizeAttenuation: false, transparent: true, depthWrite: false, depthTest: false });
+        this.MOUSE_MATERIAL = new THREE.PointsMaterial({ color: 0xff0000, map: pointTexture, size: 10, sizeAttenuation: false, transparent: true, depthWrite: false, depthTest: false });
         this.MAX_POINTS = 100; // TODO: better to remove this limitation
         this.MAX_DISTANCE = 500; // when intersected object's distance is too far away, then ignore it
         this.OBJ_NAME = 'object_for_measure';
         this.LABEL_NAME = 'label_for_measure';
-        this.MOUSE_NAME = 'point_for_mouse';
         this.mouseMoved = false;
         this.isCompleted = false;
         this.pointCount = 0; // used to store how many points user have been picked
         this.pointArray = [];
-        this.tempFontSize = 0; // used to dymanically calculate a font size
+        this.measureResult = 0;
         this.mousedown = (e) => {
             this.mouseMoved = false;
         };
         this.mousemove = (e) => {
+            if (this.isCompleted)
+                return;
             this.mouseMoved = true;
             const point = this.getClosestIntersection(e);
             if (!point) {
                 return;
             }
             // update the mouse point
-            const geom = this.mousePoint.geometry;
-            const pos = (geom.attributes && geom.attributes.position) || undefined;
-            if (pos) {
-                let i = 0;
-                pos.array[i++] = point.x;
-                pos.array[i++] = point.y;
-                pos.array[i++] = point.z;
-                geom.setDrawRange(0, 1);
-                pos.needsUpdate = true;
-            }
-            // store the first point into tempLine
-            if (this.mode === MeasureMode.Area && this.pointArray.length > 0) {
-                const line = this.tempLine || this.createLine(3);
-                const geom = line.geometry;
-                const pos = (geom.attributes && geom.attributes.position) || undefined;
-                if (pos) {
-                    let i = 6; // store the first point as the third point (a bit tricky here)
-                    pos.array[i++] = this.pointArray[0].x;
-                    pos.array[i++] = this.pointArray[0].y;
-                    pos.array[i++] = this.pointArray[0].z;
-                }
-            }
+            this.mousePoint.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(point.toArray()), 3));
             // draw the temp line as mouse moves
             if (this.pointArray.length > 0) {
                 const p0 = this.pointArray[this.pointArray.length - 1]; // get last point
-                const line = this.tempLine || this.createLine(3);
-                line.computeLineDistances(); // LineDashedMaterial requires to call this
-                const geom = line.geometry;
-                const pos = (geom.attributes && geom.attributes.position) || undefined;
-                if (pos) {
-                    let i = 0;
-                    pos.array[i++] = p0.x;
-                    pos.array[i++] = p0.y;
-                    pos.array[i++] = p0.z;
-                    pos.array[i++] = point.x;
-                    pos.array[i++] = point.y;
-                    pos.array[i++] = point.z;
-                    const range = (this.mode === MeasureMode.Area && this.pointArray.length >= 2) ? 3 : 2;
-                    geom.setDrawRange(0, range);
-                    pos.needsUpdate = true;
-                }
+                const attr = this.tempLine.geometry.getAttribute("position");
+                const pos = attr.array;
+                let i = 0;
+                pos[i++] = p0.x;
+                pos[i++] = p0.y;
+                pos[i++] = p0.z;
+                pos[i++] = point.x;
+                pos[i++] = point.y;
+                pos[i++] = point.z;
+                attr.needsUpdate = true;
+                this.tempLine.visible = true;
                 if (this.mode === MeasureMode.Distance) {
                     const dist = p0.distanceTo(point);
-                    const text = `${this.numberToString(dist)} ${this.getUnitString()}`; // hard code unit to 'm' here
-                    const position = new THREE.Vector3((point.x + p0.x) / 2, (point.y + p0.y) / 2, (point.z + p0.z) / 2);
-                    this.updateLabel(line, text, position);
+                    const text = `${this.numberToString(dist + this.measureResult)} ${this.getUnitString()}`; // hard code unit to 'm' here
+                    // const position = new THREE.Vector3((point.x + p0.x) / 2, (point.y + p0.y) / 2, (point.z + p0.z) / 2);
+                    this.updateLabel(text, point);
                 }
-                if (!this.tempLine) {
-                    this.scene.add(line); // just add to scene once
-                    this.tempLine = line;
+                if (this.mode === MeasureMode.Area) {
+                    // add line between the mouse and the first point
+                    let i = 6; // store the first point as the third point (a bit tricky here)
+                    pos[i++] = this.pointArray[0].x;
+                    pos[i++] = this.pointArray[0].y;
+                    pos[i++] = this.pointArray[0].z;
+                    if (this.pointArray.length > 1) {
+                        const tempArray = [];
+                        this.pointArray.forEach(p => {
+                            tempArray.push(...p.toArray());
+                        });
+                        tempArray.push(...point.toArray());
+                        this.faces.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(tempArray), 3));
+                        const length = this.pointArray.length + 1;
+                        const indices = [];
+                        for (let i = 2; i < length; i += 1) {
+                            indices.push(length - 1, i - 2, i - 1);
+                        }
+                        this.faces.geometry.setIndex(indices);
+                        const area = this.calculateArea(this.pointArray.concat(point));
+                        const text = `${this.numberToString(area)} ${this.getUnitString()}`;
+                        this.updateLabel(text, point);
+                    }
                 }
+            }
+            if (this.pointArray.length === 2 && this.mode === MeasureMode.Angle) {
+                this.updateCurve(this.pointArray[0], this.pointArray[1], point);
             }
         };
         this.mouseup = (e) => {
@@ -116,47 +114,38 @@ export default class Measure {
                 return;
             }
             this.lastClickTime = now;
-            const count = this.pointArray.length;
-            if (this.points) {
-                const geom = this.points.geometry;
-                const pos = (geom.attributes && geom.attributes.position) || undefined;
-                if (pos && count * 3 + 3 < this.MAX_POINTS) {
-                    const i = count * 3;
-                    pos.array[i] = point.x;
-                    pos.array[i + 1] = point.y;
-                    pos.array[i + 2] = point.z;
-                    geom.setDrawRange(0, count + 1);
-                    pos.needsUpdate = true;
-                }
-            }
-            if ((this.mode === MeasureMode.Distance || this.mode === MeasureMode.Area || this.mode === MeasureMode.Angle) && this.polyline) {
-                const geom = this.polyline.geometry;
-                const pos = (geom.attributes && geom.attributes.position) || undefined;
-                if (pos && count * 3 + 3 < this.MAX_POINTS) {
-                    const i = count * 3;
-                    pos.array[i] = point.x;
-                    pos.array[i + 1] = point.y;
-                    pos.array[i + 2] = point.z;
-                    geom.setDrawRange(0, count + 1);
-                    pos.needsUpdate = true;
-                }
-                else {
-                    console.error('Failed to get attributes.position, or number of points exceeded MAX_POINTS!');
-                }
-                this.polyline.computeLineDistances(); // LineDashedMaterial requires to call this
-            }
-            if (this.mode === MeasureMode.Area && this.faces) {
-                const geom = this.faces.geometry;
-                geom.attributes.position.push(point);
-                const len = geom.attributes.vertices.length;
-                if (len > 2) {
-                    geom.computeVertexNormals();
-                }
-            }
             // If there is point added, then increase the count. Here we use one counter to count both points and line geometry.
             this.pointArray.push(point);
             if (this.mode === MeasureMode.Angle && this.pointArray.length >= 3) {
                 this.complete();
+            }
+            const length = this.pointArray.length;
+            if (length > 1) {
+                this.measureResult += this.pointArray[length - 1].distanceTo(this.pointArray[length - 2]);
+            }
+            const positionAttribute = this.measurePoints.geometry.getAttribute("position");
+            if (!positionAttribute) {
+                this.measurePoints.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(point.toArray()), 3));
+            }
+            else {
+                const oldLength = positionAttribute.array.length;
+                const newPosition = new Float32Array(oldLength + 3);
+                newPosition.set(positionAttribute.array);
+                newPosition[oldLength] = point.x;
+                newPosition[oldLength + 1] = point.y;
+                newPosition[oldLength + 2] = point.z;
+                this.measurePoints.geometry.setAttribute("position", new THREE.BufferAttribute(newPosition, 3));
+            }
+            if ((this.mode === MeasureMode.Distance || this.mode === MeasureMode.Area || this.mode === MeasureMode.Angle) && length > 1) {
+                this.measureLine.geometry.setAttribute("position", this.measurePoints.geometry.getAttribute("position").clone());
+            }
+            if (this.mode === MeasureMode.Area && length > 2) {
+                this.faces.geometry.setAttribute("position", this.measurePoints.geometry.getAttribute("position").clone());
+                const indices = [];
+                for (let i = 2; i < length; i += 1) {
+                    indices.push(length - 1, i - 2, i - 1);
+                }
+                this.faces.geometry.setIndex(indices);
             }
         };
         this.keydown = (e) => {
@@ -172,14 +161,14 @@ export default class Measure {
          * @param e
          */
         this.getClosestIntersection = (e) => {
-            if (!this.raycaster || !this.camera || !this.scene || this.isCompleted) {
+            if (!this.raycaster || !this.camera || !this.scene) {
                 return;
             }
             const x = e.clientX;
             const y = e.clientY;
             const mouse = new THREE.Vector2();
-            mouse.x = (x / this.renderer.domElement.clientWidth) * 2 - 1; // must use clientWidth rather than width here!
-            mouse.y = -(y / this.renderer.domElement.clientHeight) * 2 + 1;
+            mouse.x = (x / this.canvas.clientWidth) * 2 - 1; // must use clientWidth rather than width here!
+            mouse.y = -(y / this.canvas.clientHeight) * 2 + 1;
             this.raycaster.setFromCamera(mouse, this.camera);
             let intersects = this.raycaster.intersectObject(this.scene, true) || [];
             if (intersects && intersects.length > 0) {
@@ -204,6 +193,7 @@ export default class Measure {
      * Starts the measurement
      */
     open() {
+        this.close();
         // add mouse 'click' event, but do not trigger highlight for mouse drag event
         this.canvas.addEventListener('mousedown', this.mousedown);
         this.canvas.addEventListener('mousemove', this.mousemove);
@@ -212,20 +202,40 @@ export default class Measure {
         window.addEventListener('keydown', this.keydown);
         this.pointArray = [];
         this.raycaster = new THREE.Raycaster();
+        this.measureResult = 0;
         // points are required for measuring distance, area and angle
-        this.points = this.createPoints();
-        this.scene.add(this.points);
+        this.measurePoints = new THREE.Points(new THREE.BufferGeometry(), this.POINT_MATERIAL);
+        this.measurePoints.name = 'measure-points';
+        this.scene.add(this.measurePoints);
         // polyline is required for measuring distance, area and angle
-        this.polyline = this.createLine();
-        this.scene.add(this.polyline);
+        this.measureLine = new THREE.Line(new THREE.BufferGeometry(), this.LINE_MATERIAL);
+        this.measureLine.name = 'mesaure-line';
+        this.scene.add(this.measureLine);
+        // change with mouse movement
+        this.tempLine = new THREE.Line(new THREE.BufferGeometry(), this.LINE_MATERIAL);
+        this.tempLine.name = 'moving-line';
+        let count = 2;
+        if (this.mode === MeasureMode.Area)
+            count = 3;
+        this.tempLine.geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+        this.tempLine.visible = false;
+        this.scene.add(this.tempLine);
         if (this.mode === MeasureMode.Area) {
-            this.faces = this.createFaces();
+            this.faces = new THREE.Mesh(new THREE.BufferGeometry(), this.MESH_MATERIAL);
+            this.faces.name = 'measure-polygon';
             this.scene.add(this.faces);
         }
+        if (this.mode === MeasureMode.Angle) {
+            this.curve = new THREE.Line(new THREE.BufferGeometry(), this.LINE_MATERIAL);
+            this.curve.name = 'mesaure-angle-curve';
+            this.scene.add(this.curve);
+        }
         this.isCompleted = false;
-        this.renderer.domElement.style.cursor = 'crosshair';
-        this.mousePoint = this.createPoints(1, this.MOUSE_NAME, this.MOUSE_MATERIAL);
+        this.canvas.style.cursor = 'crosshair';
+        this.mousePoint = new THREE.Points(new THREE.BufferGeometry(), this.MOUSE_MATERIAL);
+        this.mousePoint.name = 'measure-mouse-point';
         this.scene.add(this.mousePoint);
+        this.updateLabel('', new THREE.Vector3(), false);
     }
     /**
      * Ends the measurement
@@ -238,51 +248,19 @@ export default class Measure {
         window.removeEventListener('keydown', this.keydown);
         this.mousePoint && this.scene.remove(this.mousePoint);
         this.tempLine && this.scene.remove(this.tempLine);
-        this.tempLineForArea && this.scene.remove(this.tempLineForArea);
-        this.points && this.scene.remove(this.points);
-        this.polyline && this.scene.remove(this.polyline);
+        this.measurePoints && this.scene.remove(this.measurePoints);
+        this.measureLine && this.scene.remove(this.measureLine);
         this.faces && this.scene.remove(this.faces);
         this.curve && this.scene.remove(this.curve);
+        this.label && this.scene.remove(this.label);
         this.pointArray = [];
         this.raycaster = undefined;
         this.mousePoint = undefined;
         this.tempLine = undefined;
-        this.tempLineForArea = undefined;
-        this.points = undefined;
-        this.polyline = undefined;
-        this.renderer.domElement.style.cursor = '';
-    }
-    /**
-     * Creates THREE.Points
-     */
-    createPoints(pointCount = this.MAX_POINTS, name = this.OBJ_NAME, material = this.POINT_MATERIAL) {
-        const geom = new THREE.BufferGeometry();
-        const pos = new Float32Array(pointCount * 3); // 3 vertices per point
-        geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); // the attribute name cannot be 'positions'!
-        geom.setDrawRange(0, 0); // do not draw anything yet, otherwise it may draw a point by default
-        const obj = new THREE.Points(geom, material);
-        obj.name = name;
-        return obj;
-    }
-    /**
-     * Creates THREE.Line
-     */
-    createLine(pointCount = this.MAX_POINTS) {
-        const geom = new THREE.BufferGeometry();
-        const pos = new Float32Array(pointCount * 3); // 3 vertices per point
-        geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); // the attribute name cannot be 'positions'!
-        const obj = new THREE.Line(geom, this.LINE_MATERIAL);
-        obj.name = this.OBJ_NAME;
-        return obj;
-    }
-    /**
-     * Creates THREE.Mesh
-     */
-    createFaces() {
-        const geom = new THREE.BufferGeometry();
-        const obj = new THREE.Mesh(geom, this.MESH_MATERIAL);
-        obj.name = this.OBJ_NAME;
-        return obj;
+        this.measurePoints = undefined;
+        this.measureLine = undefined;
+        this.canvas.style.cursor = '';
+        this.measureResult = 0;
     }
     /**
      * Draw completed
@@ -293,30 +271,24 @@ export default class Measure {
         }
         let clearPoints = false;
         let clearPolyline = false;
-        // for measure area, we need to make a close surface, then add area label
         const count = this.pointArray.length;
-        if (this.mode === MeasureMode.Area && this.polyline) {
+        if (this.mode === MeasureMode.Area) {
+            // for measure area, we need to make a close surface, then add area label
             if (count > 2) {
                 const p0 = this.pointArray[0];
                 const p1 = this.pointArray[1];
                 const p2 = this.pointArray[count - 1];
-                const dir1 = this.getAngleBisector(p1, p0, p2);
-                const geom = this.polyline.geometry;
-                const pos = (geom.attributes && geom.attributes.position) || undefined;
-                if (pos && count * 3 + 3 < this.MAX_POINTS) {
-                    const i = count * 3;
-                    pos.array[i] = p0.x;
-                    pos.array[i + 1] = p0.y;
-                    pos.array[i + 2] = p0.z;
-                    geom.setDrawRange(0, count + 1);
-                    pos.needsUpdate = true;
-                }
+                const attr = this.measureLine.geometry.getAttribute("position");
+                const oldLength = attr.length;
+                const newPosition = new Float32Array(oldLength + 3);
+                newPosition.set(attr.array);
+                newPosition[oldLength] = p0.x;
+                newPosition[oldLength + 1] = p0.y;
+                newPosition[oldLength + 2] = p0.z;
+                this.measureLine.geometry.setAttribute("position", new THREE.BufferAttribute(newPosition, 3));
                 const area = this.calculateArea(this.pointArray);
                 const text = `${this.numberToString(area)} ${this.getUnitString()}`;
-                const distance = p1.distanceTo(p0);
-                const d = distance * 0.4; // distance from label to p0
-                const position = p0.clone().add(new THREE.Vector3(dir1.x * d, dir1.y * d, dir1.z * d));
-                this.updateLabel(this.polyline, text, position);
+                this.updateLabel(text, p2);
             }
             else {
                 clearPoints = true;
@@ -328,24 +300,9 @@ export default class Measure {
                 clearPoints = true;
             }
         }
-        if (this.mode === MeasureMode.Angle && this.polyline) {
-            if (count >= 3) {
-                const p0 = this.pointArray[0];
-                const p1 = this.pointArray[1];
-                const p2 = this.pointArray[2];
-                const dir0 = new THREE.Vector3(p0.x - p1.x, p0.y - p1.y, p0.z - p1.z).normalize();
-                const dir1 = this.getAngleBisector(p0, p1, p2);
-                const dir2 = new THREE.Vector3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z).normalize();
-                const angle = this.calculateAngle(p0, p1, p2);
-                const text = `${this.numberToString(angle)} ${this.getUnitString()}`;
-                const distance = Math.min(p0.distanceTo(p1), p2.distanceTo(p1));
-                const d = distance * 0.2; // distance from label to p1
-                const position = p1.clone().add(new THREE.Vector3(dir1.x * d, dir1.y * d, dir1.z * d));
-                this.updateLabel(this.polyline, text, position);
-                const arcP0 = p1.clone().add(new THREE.Vector3(dir0.x * d, dir0.y * d, dir0.z * d));
-                const arcP2 = p1.clone().add(new THREE.Vector3(dir2.x * d, dir2.y * d, dir2.z * d));
-                this.curve = this.createCurve(arcP0, position, arcP2);
-                this.scene.add(this.curve);
+        if (this.mode === MeasureMode.Angle) {
+            if (count > 2) {
+                this.updateCurve(this.pointArray[0], this.pointArray[1], this.pointArray[2]);
             }
             else {
                 clearPoints = true;
@@ -353,19 +310,19 @@ export default class Measure {
             }
         }
         // invalid case, clear useless objects
-        if (clearPoints && this.points) {
-            this.scene.remove(this.points);
-            this.points = undefined;
+        if (clearPoints) {
+            this.scene.remove(this.measurePoints);
+            this.measurePoints = undefined;
         }
-        if (clearPolyline && this.polyline) {
-            this.scene.remove(this.polyline);
-            this.polyline = undefined;
+        if (clearPolyline) {
+            this.scene.remove(this.measureLine);
+            this.measureLine = undefined;
         }
         this.isCompleted = true;
-        this.renderer.domElement.style.cursor = '';
+        this.canvas.style.cursor = '';
         this.mousePoint && this.scene.remove(this.mousePoint);
         this.tempLine && this.scene.remove(this.tempLine);
-        this.tempLineForArea && this.scene.remove(this.tempLineForArea);
+        // this.open();
     }
     /**
      * Draw canceled
@@ -376,35 +333,49 @@ export default class Measure {
     /**
      * Adds or update label
      */
-    updateLabel(obj, text, position) {
+    updateLabel(text, position, visible = true) {
         if (this.label) {
+            this.label.element.children[0].textContent = text;
             this.label.position.copy(position);
+            this.label.visible = visible;
         }
         else {
             const element = document.createElement('div');
-            element.textContent = text;
-            Object.assign(element.style, {
+            const child = document.createElement("div");
+            child.textContent = text;
+            Object.assign(child.style, {
                 fontSize: '15px',
                 color: 'red',
                 backgroundColor: 'rgba(255,255,255,0.5)',
-                padding: '10px',
+                padding: '5px',
+                transform: 'translateY(-40px)'
             });
+            element.appendChild(child);
             const label = new CSS2DObject(element);
             label.position.copy(position);
-            obj.add(label);
+            label.visible = visible;
             this.label = label;
+            this.scene.add(this.label);
         }
     }
     /**
-     * Creates the arc curve to indicate the angle in degree
+     * Updates the arc curve to indicate the angle in degree
      */
-    createCurve(p0, p1, p2) {
-        const curve = new THREE.QuadraticBezierCurve3(p0, p1, p2);
+    updateCurve(p0, p1, p2) {
+        const dir0 = new THREE.Vector3(p0.x - p1.x, p0.y - p1.y, p0.z - p1.z).normalize();
+        const dir1 = this.getAngleBisector(p0, p1, p2);
+        const dir2 = new THREE.Vector3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z).normalize();
+        const angle = this.calculateAngle(p0, p1, p2);
+        const text = `${this.numberToString(angle)} ${this.getUnitString()}`;
+        const distance = Math.min(p0.distanceTo(p1), p2.distanceTo(p1));
+        const d = distance * 0.2; // distance from label to p1
+        const position = p1.clone().add(new THREE.Vector3(dir1.x * d, dir1.y * d, dir1.z * d));
+        this.updateLabel(text, position);
+        const arcP0 = p1.clone().add(new THREE.Vector3(dir0.x * d, dir0.y * d, dir0.z * d));
+        const arcP2 = p1.clone().add(new THREE.Vector3(dir2.x * d, dir2.y * d, dir2.z * d));
+        const curve = new THREE.QuadraticBezierCurve3(arcP0, position, arcP2);
         const points = curve.getPoints(4); // get points
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const obj = new THREE.Line(geometry, this.LINE_MATERIAL);
-        obj.name = this.LABEL_NAME;
-        return obj;
+        this.curve.geometry = new THREE.BufferGeometry().setFromPoints(points);
     }
     /**
      * Calculates area
@@ -413,10 +384,11 @@ export default class Measure {
      */
     calculateArea(points) {
         let area = 0;
-        for (let i = 0, j = 1, k = 2; k < points.length; j++, k++) {
-            const a = points[i].distanceTo(points[j]);
-            const b = points[j].distanceTo(points[k]);
-            const c = points[k].distanceTo(points[i]);
+        const last = points[points.length - 1];
+        for (let i = 0; i < points.length - 2; i++) {
+            const a = points[i].distanceTo(last);
+            const b = points[i + 1].distanceTo(last);
+            const c = points[i].distanceTo(points[i + 1]);
             const p = (a + b + c) / 2;
             area += Math.sqrt(p * (p - a) * (p - b) * (p - c));
         }
