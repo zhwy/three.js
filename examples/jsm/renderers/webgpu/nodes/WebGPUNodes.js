@@ -1,5 +1,5 @@
 import WebGPUNodeBuilder from './WebGPUNodeBuilder.js';
-import NodeFrame from '../../nodes/core/NodeFrame.js';
+import NodeFrame from 'three-nodes/core/NodeFrame.js';
 
 class WebGPUNodes {
 
@@ -19,7 +19,7 @@ class WebGPUNodes {
 
 		if ( nodeBuilder === undefined ) {
 
-			nodeBuilder = new WebGPUNodeBuilder( object.material, this.renderer, lightNode ).build();
+			nodeBuilder = new WebGPUNodeBuilder( object, this.renderer, lightNode ).build();
 
 			this.builders.set( object, nodeBuilder );
 

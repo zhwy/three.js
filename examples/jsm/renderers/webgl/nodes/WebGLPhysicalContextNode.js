@@ -1,7 +1,7 @@
-import ContextNode from '../../nodes/core/ContextNode.js';
-import NormalNode from '../../nodes/accessors/NormalNode.js';
-import ExpressionNode from '../../nodes/core/ExpressionNode.js';
-import FloatNode from '../../nodes/inputs/FloatNode.js';
+import ContextNode from 'three-nodes/core/ContextNode.js';
+import NormalNode from 'three-nodes/accessors/NormalNode.js';
+import ExpressionNode from 'three-nodes/core/ExpressionNode.js';
+import FloatNode from 'three-nodes/inputs/FloatNode.js';
 
 class WebGLPhysicalContextNode extends ContextNode {
 
@@ -30,11 +30,11 @@ class WebGLPhysicalContextNode extends ContextNode {
 
 			roughness = new FloatNode( 1.0 ).setConst( true );
 
-			this.setContextValue( 'uv', new NormalNode( NormalNode.WORLD ) );
+			this.context.uv = new NormalNode( NormalNode.WORLD );
 
 		}
 
-		this.setContextValue( 'roughness', roughness );
+		this.context.roughness = roughness;
 
 		return super.generate( builder, output );
 
