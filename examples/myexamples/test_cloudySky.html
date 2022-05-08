@@ -30,9 +30,15 @@
 				white-space: nowrap;
 			}
 		</style>
-
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../../build/three.module.js"
+				}
+			}
+		</script>
 		<script type="module">
-			import * as THREE from "../../build/three.module.js";
+			import * as THREE from "three";
 
 			import {
 				OrbitControls,

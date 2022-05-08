@@ -10,8 +10,15 @@
 		<link type="text/css" rel="stylesheet" href="../main.css" />
 	</head>
 	<body>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../../build/three.module.js"
+				}
+			}
+		</script>
 		<script type="module">
-			import * as THREE from "../../build/three.module.js";
+			import * as THREE from "three";
 			import { OrbitControls } from "../jsm/controls/OrbitControls.js";
 			import * as SceneUtils from "../jsm/utils/SceneUtils.js";
 

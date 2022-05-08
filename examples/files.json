@@ -8,7 +8,7 @@
 		"myexamples/test_waterTest",
 		"myexamples/test_textureCanvas",
 		"myexamples/test_measure",
-		"myexamples/test_gpgpu"
+		"myexamples/test_gpgpu_water"
 	],
 	"webgl": [
 		"webgl_animation_keyframes",

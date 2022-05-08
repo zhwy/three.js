@@ -1,245 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>three.js test - 拖入加载模型</title>
-		<meta charset="utf-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-		/>
-		<link type="text/css" rel="stylesheet" href="../main.css" />
-		<script src="./jszip.js"></script>
-	</head>
 
-	<body>
-		<script type="module">
-			import * as THREE from "../../build/three.module.js";
-			import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+<head>
+	<title>three.js test - 拖入加载模型</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+	<link type="text/css" rel="stylesheet" href="../main.css" />
+	<script src="./jszip.js"></script>
+</head>
 
-			import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
-			import { FBXLoader } from "../jsm/loaders/FBXLoader.js";
-
-			import { IFCLoader } from "../jsm/loaders/IFCLoader.js";
-			import { OBJLoader } from "../jsm/loaders/OBJLoader.js";
-			import { MTLLoader } from "../jsm/loaders/MTLLoader.js";
-
-			let camera, scene, renderer;
-			let mesh;
-
-			const manager = new THREE.LoadingManager();
-
-			manager.setURLModifier((url, path) => {
-				return (path || "") + url;
-			});
-
-			init();
-			animate();
-			enableDropModel();
-
-			function init() {
-				camera = new THREE.PerspectiveCamera(
-					70,
-					window.innerWidth / window.innerHeight,
-					0.01,
-					100000
-				);
-				camera.position.copy(new THREE.Vector3(0, 0, 1));
-
-				scene = new THREE.Scene();
-
-				scene.background = new THREE.Color(0x777777);
-
-				scene.add(camera);
-
-				scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-
-				const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-				camera.add(directionalLight);
-
-				renderer = new THREE.WebGLRenderer({ antialias: true });
-				renderer.setPixelRatio(window.devicePixelRatio);
-				renderer.setSize(window.innerWidth, window.innerHeight);
-				document.body.appendChild(renderer.domElement);
-
-				const controls = new OrbitControls(camera, renderer.domElement);
-
-				window.addEventListener("resize", onWindowResize);
+<body>
+	<script type="importmap">
+			{
+				"imports": {
+					"three": "../../build/three.module.js"
+				}
 			}
+	</script>
+	<script type="module">
+		import * as THREE from "three";
+		import { OrbitControls } from "../jsm/controls/OrbitControls.js";
 
-			function onWindowResize() {
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+		import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
+		import { FBXLoader } from "../jsm/loaders/FBXLoader.js";
 
-				renderer.setSize(window.innerWidth, window.innerHeight);
-			}
+		import { IFCLoader } from "../jsm/loaders/IFCLoader.js";
+		import { OBJLoader } from "../jsm/loaders/OBJLoader.js";
+		import { MTLLoader } from "../jsm/loaders/MTLLoader.js";
 
-			function animate() {
-				requestAnimationFrame(animate);
+		let camera, scene, renderer;
+		let mesh;
 
-				renderer.render(scene, camera);
-			}
+		const manager = new THREE.LoadingManager();
 
-			function enableDropModel() {
-				function readModelFile(file) {
-					// var reader = new FileReader();
-					// reader.readAsDataURL(file);
-					// reader.onload = (res) => {
-					// 	debugger;
-					// 	reader.result;
-					// };
+		manager.setURLModifier((url, path) => {
+			return (path || "") + url;
+		});
 
-					if (file.name.includes(".zip")) {
-						const zip = new JSZip();
+		init();
+		animate();
+		enableDropModel();
 
-						// 解压文件
-						zip.loadAsync(file).then((res) => {
-							console.log(res.files);
+		function init() {
+			camera = new THREE.PerspectiveCamera(
+				70,
+				window.innerWidth / window.innerHeight,
+				0.01,
+				100000
+			);
+			camera.position.copy(new THREE.Vector3(0, 0, 1));
 
-							const urls = {};
-							const promises = [];
-							const getDataUrl = async (name) => {
-								const blob = await zip.file(name).async("blob");
-								urls[name] = URL.createObjectURL(blob);
-							};
+			scene = new THREE.Scene();
 
-							let mainFile = "",
-								mtlFile = "";
+			scene.background = new THREE.Color(0x777777);
 
-							Object.keys(res.files).forEach((key) => {
-								const value = res.files[key];
+			scene.add(camera);
 
-								if (!value.dir) {
-									promises.push(getDataUrl(key));
-									if (value.name.includes(".obj")) mainFile = value.name;
-									if (value.name.includes(".mtl")) mtlFile = value.name;
-								}
+			scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+			const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+			camera.add(directionalLight);
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.body.appendChild(renderer.domElement);
+
+			const controls = new OrbitControls(camera, renderer.domElement);
+
+			window.addEventListener("resize", onWindowResize);
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			renderer.render(scene, camera);
+		}
+
+		function enableDropModel() {
+			function readModelFile(file) {
+				// var reader = new FileReader();
+				// reader.readAsDataURL(file);
+				// reader.onload = (res) => {
+				// 	debugger;
+				// 	reader.result;
+				// };
+
+				if (file.name.includes(".zip")) {
+					const zip = new JSZip();
+
+					// 解压文件
+					zip.loadAsync(file).then((res) => {
+						console.log(res.files);
+
+						const urls = {};
+						const promises = [];
+						const getDataUrl = async (name) => {
+							const blob = await zip.file(name).async("blob");
+							urls[name] = URL.createObjectURL(blob);
+						};
+
+						let mainFile = "",
+							mtlFile = "";
+
+						Object.keys(res.files).forEach((key) => {
+							const value = res.files[key];
+
+							if (!value.dir) {
+								promises.push(getDataUrl(key));
+								if (value.name.includes(".obj")) mainFile = value.name;
+								if (value.name.includes(".mtl")) mtlFile = value.name;
+							}
+						});
+
+						Promise.all(promises).then(() => {
+							manager.setURLModifier((url, path) => {
+								return urls[url];
 							});
 
-							Promise.all(promises).then(() => {
-								manager.setURLModifier((url, path) => {
-									return urls[url];
-								});
+							const mtlLoader = new MTLLoader(manager);
 
-								const mtlLoader = new MTLLoader(manager);
+							const objLoader = new OBJLoader(manager);
 
-								const objLoader = new OBJLoader(manager);
-
-								mtlLoader.load(mtlFile, (materials) => {
-									materials.preload();
-									objLoader.setMaterials(materials).load(mainFile, (model) => {
-										scene.add(model);
-									});
+							mtlLoader.load(mtlFile, (materials) => {
+								materials.preload();
+								objLoader.setMaterials(materials).load(mainFile, (model) => {
+									scene.add(model);
 								});
 							});
 						});
-					}
-
-					if (file.name.includes(".ifc")) {
-						const url = URL.createObjectURL(file);
-						const ifcLoader = new IFCLoader(manager);
-						ifcLoader.ifcManager.setWasmPath("../jsm/loaders/ifc/");
-						ifcLoader.load(url, (model) => {
-							scene.add(model);
-						});
-					}
-				}
-
-				function readModelFiles(files) {
-					const urls = {};
-
-					let mainFile = "",
-						mtlFile = "";
-
-					files.forEach((file) => {
-						urls[file.path] = URL.createObjectURL(file);
-						if (file.name.includes(".obj")) mainFile = file.path;
-						if (file.name.includes(".mtl")) mtlFile = file.path;
-					});
-
-					manager.setURLModifier((url, path) => {
-						return urls[url.replace("./", "")];
-					});
-
-					const objLoader = new OBJLoader(manager);
-					const mtlLoader = new MTLLoader(manager);
-
-					mtlLoader.load(mtlFile, (materials) => {
-						materials.preload();
-						objLoader.setMaterials(materials).load(mainFile, (model) => {
-							scene.add(model);
-						});
 					});
 				}
 
-				function allowDrop(e) {
-					e.preventDefault();
-					e.stopPropagation();
+				if (file.name.includes(".ifc")) {
+					const url = URL.createObjectURL(file);
+					const ifcLoader = new IFCLoader(manager);
+					ifcLoader.ifcManager.setWasmPath("../jsm/loaders/ifc/");
+					ifcLoader.load(url, (model) => {
+						scene.add(model);
+					});
+				}
+			}
+
+			function readModelFiles(files) {
+				const urls = {};
+
+				let mainFile = "",
+					mtlFile = "";
+
+				files.forEach((file) => {
+					urls[file.path] = URL.createObjectURL(file);
+					if (file.name.includes(".obj")) mainFile = file.path;
+					if (file.name.includes(".mtl")) mtlFile = file.path;
+				});
+
+				manager.setURLModifier((url, path) => {
+					return urls[url.replace("./", "")];
+				});
+
+				const objLoader = new OBJLoader(manager);
+				const mtlLoader = new MTLLoader(manager);
+
+				mtlLoader.load(mtlFile, (materials) => {
+					materials.preload();
+					objLoader.setMaterials(materials).load(mainFile, (model) => {
+						scene.add(model);
+					});
+				});
+			}
+
+			function allowDrop(e) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+
+			function drop(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				const df = e.dataTransfer;
+
+				if (df.items.length > 1) {
+					alert("多文件请使用文件夹！");
+					return;
 				}
 
-				function drop(e) {
-					e.preventDefault();
-					e.stopPropagation();
-					const df = e.dataTransfer;
+				const item = df.items[0];
+				const entry = item.webkitGetAsEntry();
+				if (entry.isFile) {
+					entry.file((file) => {
+						readModelFile(file);
+					});
+				} else {
+					// 文件夹
+					const files = [];
+					const p0 = [];
 
-					if (df.items.length > 1) {
-						alert("多文件请使用文件夹！");
-						return;
-					}
-
-					const item = df.items[0];
-					const entry = item.webkitGetAsEntry();
-					if (entry.isFile) {
-						entry.file((file) => {
-							readModelFile(file);
+					const readFile = (entry) => {
+						return new Promise((resolve) => {
+							entry.file((file) => {
+								file.path = entry.fullPath;
+								files.push(file);
+								resolve();
+							});
 						});
-					} else {
-						// 文件夹
-						const files = [];
-						const p0 = [];
+					};
 
-						const readFile = (entry) => {
-							return new Promise((resolve) => {
-								entry.file((file) => {
-									file.path = entry.fullPath;
-									files.push(file);
+					const readEntries = (entry) => {
+						const reader = entry.createReader();
+						return new Promise((resolve) => {
+							reader.readEntries((entries) => {
+								const p = [];
+								const dirs = [];
+								entries.forEach((entry) => {
+									if (entry.isFile) {
+										p.push(readFile(entry));
+									} else {
+										p.push(readEntries(entry));
+									}
+								});
+								Promise.all(p).then(() => {
 									resolve();
 								});
 							});
-						};
-
-						const readEntries = (entry) => {
-							const reader = entry.createReader();
-							return new Promise((resolve) => {
-								reader.readEntries((entries) => {
-									const p = [];
-									const dirs = [];
-									entries.forEach((entry) => {
-										if (entry.isFile) {
-											p.push(readFile(entry));
-										} else {
-											p.push(readEntries(entry));
-										}
-									});
-									Promise.all(p).then(() => {
-										resolve();
-									});
-								});
-							});
-						};
-
-						readEntries(entry).then(() => {
-							console.log(files);
-							readModelFiles(files);
 						});
-					}
-				}
+					};
 
-				var container = renderer.domElement;
-				container.ondragenter = allowDrop;
-				container.ondragover = allowDrop;
-				container.ondragleave = allowDrop;
-				container.ondrop = drop;
+					readEntries(entry).then(() => {
+						console.log(files);
+						readModelFiles(files);
+					});
+				}
 			}
-		</script>
-	</body>
+
+			var container = renderer.domElement;
+			container.ondragenter = allowDrop;
+			container.ondragover = allowDrop;
+			container.ondragleave = allowDrop;
+			container.ondrop = drop;
+		}
+	</script>
+</body>
+
 </html>
