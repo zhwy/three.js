@@ -5927,9 +5927,13 @@ class Object3D extends EventDispatcher {
 		this.userData = {};
 	}
 
-	onBeforeRender() {}
+	onBeforeRender()
+	/* renderer, scene, camera, geometry, material, group */
+	{}
 
-	onAfterRender() {}
+	onAfterRender()
+	/* renderer, scene, camera, geometry, material, group */
+	{}
 
 	applyMatrix4(matrix) {
 		if (this.matrixAutoUpdate) this.updateMatrix();
@@ -6186,7 +6190,9 @@ class Object3D extends EventDispatcher {
 		return target.set(e[8], e[9], e[10]).normalize();
 	}
 
-	raycast() {}
+	raycast()
+	/* raycaster, intersects */
+	{}
 
 	traverse(callback) {
 		callback(this);
@@ -6798,11 +6804,17 @@ class Material extends EventDispatcher {
 		this._alphaTest = value;
 	}
 
-	onBuild() {}
+	onBuild()
+	/* shaderobject, renderer */
+	{}
 
-	onBeforeRender() {}
+	onBeforeRender()
+	/* renderer, scene, camera, geometry, object, group */
+	{}
 
-	onBeforeCompile() {}
+	onBeforeCompile()
+	/* shaderobject, renderer */
+	{}
 
 	customProgramCacheKey() {
 		return this.onBeforeCompile.toString();
@@ -7087,9 +7099,9 @@ class Material extends EventDispatcher {
 
 Material.prototype.isMaterial = true;
 
-Material.fromType = function
-	/*type*/
-() {
+Material.fromType = function ()
+/*type*/
+{
 	// TODO: Behavior added in Materials.js
 	return null;
 };
@@ -17962,7 +17974,10 @@ function WebGLUtils(gl, extensions, capabilities) {
 			} else {
 				return null;
 			}
-		}
+		} // if "p" can't be resolved, assume the user defines a WebGL constant as a string (fallback/workaround for packed RGB formats)
+
+
+		return gl[p] !== undefined ? gl[p] : null;
 	}
 
 	return {
@@ -19538,9 +19553,9 @@ function WebGLRenderer(parameters = {}) {
 		_isContextLost = true;
 	}
 
-	function
-		/* event */
-	onContextRestore() {
+	function onContextRestore()
+	/* event */
+	{
 		console.log('THREE.WebGLRenderer: Context Restored.');
 		_isContextLost = false;
 		const infoAutoReset = info.autoReset;
@@ -20623,7 +20638,9 @@ class FogExp2 {
 		return new FogExp2(this.color, this.density);
 	}
 
-	toJSON() {
+	toJSON()
+	/* meta */
+	{
 		return {
 			type: 'FogExp2',
 			color: this.color.getHex(),
@@ -20647,7 +20664,9 @@ class Fog {
 		return new Fog(this.color, this.near, this.far);
 	}
 
-	toJSON() {
+	toJSON()
+	/* meta */
+	{
 		return {
 			type: 'Fog',
 			color: this.color.getHex(),
@@ -22265,7 +22284,9 @@ class Curve {
 	//	- t [0 .. 1]
 
 
-	getPoint() {
+	getPoint()
+	/* t, optionalTarget */
+	{
 		console.warn('THREE.Curve: .getPoint() not implemented.');
 		return null;
 	} // Get point at relative position in curve according to arc length
@@ -27183,11 +27204,15 @@ class Interpolant {
 	} // Template methods for derived classes:
 
 
-	interpolate_() {
+	interpolate_()
+	/* i1, t0, t, t1 */
+	{
 		throw new Error('call to abstract method'); // implementations shall return this.resultBuffer
 	}
 
-	intervalChanged_() {// empty
+	intervalChanged_()
+	/* i1, t0, t1 */
+	{// empty
 	}
 
 } // ALIAS DEFINITIONS
@@ -28180,7 +28205,9 @@ class Loader {
 		this.requestHeader = {};
 	}
 
-	load() {}
+	load()
+	/* url, onLoad, onProgress, onError */
+	{}
 
 	loadAsync(url, onProgress) {
 		const scope = this;
@@ -28189,7 +28216,9 @@ class Loader {
 		});
 	}
 
-	parse() {}
+	parse()
+	/* data */
+	{}
 
 	setCrossOrigin(crossOrigin) {
 		this.crossOrigin = crossOrigin;
@@ -33898,15 +33927,15 @@ class PointLightHelper extends Mesh {
 		// TODO: delete this comment?
 		const distanceGeometry = new THREE.IcosahedronGeometry( 1, 2 );
 		const distanceMaterial = new THREE.MeshBasicMaterial( { color: hexColor, fog: false, wireframe: true, opacity: 0.1, transparent: true } );
-		this.lightSphere = new THREE.Mesh( bulbGeometry, bulbMaterial );
+			this.lightSphere = new THREE.Mesh( bulbGeometry, bulbMaterial );
 		this.lightDistance = new THREE.Mesh( distanceGeometry, distanceMaterial );
-		const d = light.distance;
-		if ( d === 0.0 ) {
-			this.lightDistance.visible = false;
-		} else {
-			this.lightDistance.scale.set( d, d, d );
-		}
-		this.add( this.lightDistance );
+			const d = light.distance;
+			if ( d === 0.0 ) {
+				this.lightDistance.visible = false;
+			} else {
+				this.lightDistance.scale.set( d, d, d );
+			}
+			this.add( this.lightDistance );
 		*/
 	}
 
@@ -33923,12 +33952,12 @@ class PointLightHelper extends Mesh {
 		}
 		/*
 		const d = this.light.distance;
-			if ( d === 0.0 ) {
-				this.lightDistance.visible = false;
-			} else {
-				this.lightDistance.visible = true;
+				if ( d === 0.0 ) {
+					this.lightDistance.visible = false;
+				} else {
+					this.lightDistance.visible = true;
 			this.lightDistance.scale.set( d, d, d );
-			}
+				}
 		*/
 
 	}
@@ -34327,7 +34356,7 @@ class BoxHelper extends LineSegments {
 		1/___0/|
 		| 6__|_7
 		2/___3/
-			0: max.x, max.y, max.z
+				0: max.x, max.y, max.z
 		1: min.x, max.y, max.z
 		2: min.x, min.y, max.z
 		3: max.x, min.y, max.z
@@ -35081,14 +35110,14 @@ Loader.prototype.extractUrlBase = function (url) {
 };
 
 Loader.Handlers = {
-	add: function
-		/* regex, loader */
-	() {
+	add: function ()
+	/* regex, loader */
+	{
 		console.error('THREE.Loader: Handlers.add() has been removed. Use LoadingManager.addHandler() instead.');
 	},
-	get: function
-		/* file */
-	() {
+	get: function ()
+	/* file */
+	{
 		console.error('THREE.Loader: Handlers.get() has been removed. Use LoadingManager.getHandler() instead.');
 	}
 };
@@ -35187,9 +35216,9 @@ Matrix3.prototype.multiplyVector3 = function (vector) {
 	return vector.applyMatrix3(this);
 };
 
-Matrix3.prototype.multiplyVector3Array = function
-	/* a */
-() {
+Matrix3.prototype.multiplyVector3Array = function ()
+/* a */
+{
 	console.error('THREE.Matrix3: .multiplyVector3Array() has been removed.');
 };
 
@@ -35198,9 +35227,9 @@ Matrix3.prototype.applyToBufferAttribute = function (attribute) {
 	return attribute.applyMatrix3(this);
 };
 
-Matrix3.prototype.applyToVector3Array = function
-	/* array, offset, length */
-() {
+Matrix3.prototype.applyToVector3Array = function ()
+/* array, offset, length */
+{
 	console.error('THREE.Matrix3: .applyToVector3Array() has been removed.');
 };
 
@@ -35244,9 +35273,9 @@ Matrix4.prototype.multiplyVector4 = function (vector) {
 	return vector.applyMatrix4(this);
 };
 
-Matrix4.prototype.multiplyVector3Array = function
-	/* a */
-() {
+Matrix4.prototype.multiplyVector3Array = function ()
+/* a */
+{
 	console.error('THREE.Matrix4: .multiplyVector3Array() has been removed.');
 };
 
@@ -35285,9 +35314,9 @@ Matrix4.prototype.applyToBufferAttribute = function (attribute) {
 	return attribute.applyMatrix4(this);
 };
 
-Matrix4.prototype.applyToVector3Array = function
-	/* array, offset, length */
-() {
+Matrix4.prototype.applyToVector3Array = function ()
+/* array, offset, length */
+{
 	console.error('THREE.Matrix4: .applyToVector3Array() has been removed.');
 };
 
@@ -35620,9 +35649,9 @@ Object.defineProperties(BufferAttribute.prototype, {
 			console.warn('THREE.BufferAttribute: .dynamic has been deprecated. Use .usage instead.');
 			return this.usage === DynamicDrawUsage;
 		},
-		set: function
-			/* value */
-		() {
+		set: function ()
+		/* value */
+		{
 			console.warn('THREE.BufferAttribute: .dynamic has been deprecated. Use .usage instead.');
 			this.setUsage(DynamicDrawUsage);
 		}
@@ -35635,13 +35664,13 @@ BufferAttribute.prototype.setDynamic = function (value) {
 	return this;
 };
 
-BufferAttribute.prototype.copyIndicesArray = function
-	/* indices */
-() {
+BufferAttribute.prototype.copyIndicesArray = function ()
+/* indices */
+{
 	console.error('THREE.BufferAttribute: .copyIndicesArray() has been removed.');
-}, BufferAttribute.prototype.setArray = function
-	/* array */
-() {
+}, BufferAttribute.prototype.setArray = function ()
+/* array */
+{
 	console.error('THREE.BufferAttribute: .setArray has been removed. Use BufferGeometry .setAttribute to replace/resize attribute buffers');
 }; //
 
@@ -35716,9 +35745,9 @@ InterleavedBuffer.prototype.setDynamic = function (value) {
 	return this;
 };
 
-InterleavedBuffer.prototype.setArray = function
-	/* array */
-() {
+InterleavedBuffer.prototype.setArray = function ()
+/* array */
+{
 	console.error('THREE.InterleavedBuffer: .setArray has been removed. Use BufferGeometry .setAttribute to replace/resize attribute buffers');
 }; //
 
@@ -35952,9 +35981,9 @@ Object.defineProperties(WebGLRenderer.prototype, {
 			console.warn('THREE.WebGLRenderer: .shadowMapCullFace has been removed. Set Material.shadowSide instead.');
 			return undefined;
 		},
-		set: function
-			/* value */
-		() {
+		set: function ()
+		/* value */
+		{
 			console.warn('THREE.WebGLRenderer: .shadowMapCullFace has been removed. Set Material.shadowSide instead.');
 		}
 	},
@@ -36014,9 +36043,9 @@ Object.defineProperties(WebGLShadowMap.prototype, {
 			console.warn('THREE.WebGLRenderer: .shadowMap.cullFace has been removed. Set Material.shadowSide instead.');
 			return undefined;
 		},
-		set: function
-			/* cullFace */
-		() {
+		set: function ()
+		/* cullFace */
+		{
 			console.warn('THREE.WebGLRenderer: .shadowMap.cullFace has been removed. Set Material.shadowSide instead.');
 		}
 	},
@@ -36214,19 +36243,19 @@ function JSONLoader() {
 } //
 
 const SceneUtils = {
-	createMultiMaterialObject: function
-		/* geometry, materials */
-	() {
+	createMultiMaterialObject: function ()
+	/* geometry, materials */
+	{
 		console.error('THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js');
 	},
-	detach: function
-		/* child, parent, scene */
-	() {
+	detach: function ()
+	/* child, parent, scene */
+	{
 		console.error('THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js');
 	},
-	attach: function
-		/* child, scene, parent */
-	() {
+	attach: function ()
+	/* child, scene, parent */
+	{
 		console.error('THREE.SceneUtils has been moved to /examples/jsm/utils/SceneUtils.js');
 	}
 }; //

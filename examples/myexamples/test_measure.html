@@ -2,10 +2,10 @@
 <html lang="en">
 
 <head>
-	<title>three.js - water</title>
+	<title>three.js test - 测量</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-	<link type="text/css" rel="stylesheet" href="main.css" />
+	<link type="text/css" rel="stylesheet" href="../main.css" />
 	<script src="https://cdn.bootcdn.net/ajax/libs/require.js/2.3.6/require.min.js"></script>
 	<style>
 		html,
@@ -21,8 +21,16 @@
 <body>
 	<div id="container"></div>
 
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "../../build/three.module.js"
+			}
+		}
+	</script>
+
 	<script type="module">
-		import * as THREE from "../../build/three.module.js";
+		import * as THREE from "three";
 		import Measure from "./Measure.js";
 
 		import { MeasureMode } from "./Measure.js";

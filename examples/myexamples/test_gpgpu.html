@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js test - gpgpu</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+	<link type="text/css" rel="stylesheet" href="../main.css" />
+	<script src="https://cdn.bootcdn.net/ajax/libs/require.js/2.3.6/require.min.js"></script>
+	<style>
+		html,
+		body {
+			margin: 0;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="container"></div>
+
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "../../build/three.module.js"
+			}
+		}
+	</script>
+
+	<script type="module">
+		import * as THREE from "three";
+		import { GPUComputationRenderer } from '../jsm/misc/GPUComputationRenderer.js';
+
+		let scene, camera, renderer, gpuCompute, inputVariable;
+		let groundMesh;
+		const WIDTH = 2;
+		const HEIGHT = 1;
+
+		init();
+		animate();
+		// render();
+
+		function init() {
+			// scene
+
+			scene = new THREE.Scene();
+
+			// camera
+
+			camera = new THREE.PerspectiveCamera(
+				45,
+				window.innerWidth / window.innerHeight,
+				0.1,
+				200
+			);
+			camera.position.set(0, 0, 5);
+			camera.lookAt(scene.position);
+
+			// light
+
+			const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+			directionalLight.position.set(0, 0, 1);
+			scene.add(directionalLight);
+
+			// renderer
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setPixelRatio(window.devicePixelRatio);
+			document.body.appendChild(renderer.domElement);
+
+			window.addEventListener("resize", onWindowResize);
+
+
+			// gpgpu
+			gpuCompute = new GPUComputationRenderer(WIDTH, HEIGHT, renderer);
+			const inputData = gpuCompute.createTexture();
+			inputData.image.data[1] = 2;
+			inputData.image.data[4] = 1;
+
+			const fragmentShader = `
+				#include <common>				
+
+				void main() {
+					vec2 cellSize = 1.0 / resolution.xy;
+					vec2 uv = gl_FragCoord.xy * cellSize;
+					gl_FragColor = texture2D(inputTest, uv) * 0.6;
+				}
+			`
+
+			inputVariable = gpuCompute.addVariable('inputTest', fragmentShader, inputData)
+			gpuCompute.setVariableDependencies(inputVariable, [inputVariable])
+
+			const error = gpuCompute.init();
+			if (error !== null) {
+
+				console.error(error);
+
+			}
+
+			// mesh
+
+			const groundGeometry = new THREE.PlaneGeometry(1, 1);
+			const groundMaterial = new THREE.MeshStandardMaterial({
+				roughness: 0.8,
+				metalness: 0.4,
+			});
+			groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+			scene.add(groundMesh);
+
+			gpuCompute.compute();
+			const reuslt = gpuCompute.getCurrentRenderTarget(inputVariable).texture;
+			groundMesh.material.map = reuslt;
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+			render();
+		}
+
+		function render() {
+
+			renderer.render(scene, camera);
+		}
+	</script>
+</body>
+
+</html>
