@@ -1,7 +1,9 @@
 import { EventDispatcher } from '../core/EventDispatcher.js';
 import { Texture } from '../textures/Texture.js';
-import { LinearFilter } from '../constants.js';
+import { LinearFilter, NoColorSpace, SRGBColorSpace, sRGBEncoding } from '../constants.js';
 import { Vector4 } from '../math/Vector4.js';
+import { Source } from '../textures/Source.js';
+import { warnOnce } from '../utils.js';
 
 /*
  In options, we can specify:
@@ -10,9 +12,11 @@ import { Vector4 } from '../math/Vector4.js';
 */
 class WebGLRenderTarget extends EventDispatcher {
 
-	constructor( width, height, options = {} ) {
+	constructor( width = 1, height = 1, options = {} ) {
 
 		super();
+
+		this.isWebGLRenderTarget = true;
 
 		this.width = width;
 		this.height = height;
@@ -25,7 +29,15 @@ class WebGLRenderTarget extends EventDispatcher {
 
 		const image = { width: width, height: height, depth: 1 };
 
-		this.texture = new Texture( image, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.encoding );
+		if ( options.encoding !== undefined ) {
+
+			// @deprecated, r152
+			warnOnce( 'THREE.WebGLRenderTarget: option.encoding has been replaced by option.colorSpace.' );
+			options.colorSpace = options.encoding === sRGBEncoding ? SRGBColorSpace : NoColorSpace;
+
+		}
+
+		this.texture = new Texture( image, options.mapping, options.wrapS, options.wrapT, options.magFilter, options.minFilter, options.format, options.type, options.anisotropy, options.colorSpace );
 		this.texture.isRenderTargetTexture = true;
 
 		this.texture.flipY = false;
@@ -75,6 +87,9 @@ class WebGLRenderTarget extends EventDispatcher {
 		this.height = source.height;
 		this.depth = source.depth;
 
+		this.scissor.copy( source.scissor );
+		this.scissorTest = source.scissorTest;
+
 		this.viewport.copy( source.viewport );
 
 		this.texture = source.texture.clone();
@@ -82,7 +97,8 @@ class WebGLRenderTarget extends EventDispatcher {
 
 		// ensure image object is not shared, see #20328
 
-		this.texture.image = Object.assign( {}, source.texture.image );
+		const image = Object.assign( {}, source.texture.image );
+		this.texture.source = new Source( image );
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
@@ -102,7 +118,5 @@ class WebGLRenderTarget extends EventDispatcher {
 	}
 
 }
-
-WebGLRenderTarget.prototype.isWebGLRenderTarget = true;
 
 export { WebGLRenderTarget };

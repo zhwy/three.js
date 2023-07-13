@@ -1,6 +1,7 @@
 import {
 	AdditiveBlending,
 	Color,
+	HalfFloatType,
 	MeshBasicMaterial,
 	ShaderMaterial,
 	UniformsUtils,
@@ -42,20 +43,20 @@ class UnrealBloomPass extends Pass {
 		let resx = Math.round( this.resolution.x / 2 );
 		let resy = Math.round( this.resolution.y / 2 );
 
-		this.renderTargetBright = new WebGLRenderTarget( resx, resy );
+		this.renderTargetBright = new WebGLRenderTarget( resx, resy, { type: HalfFloatType } );
 		this.renderTargetBright.texture.name = 'UnrealBloomPass.bright';
 		this.renderTargetBright.texture.generateMipmaps = false;
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			const renderTargetHorizonal = new WebGLRenderTarget( resx, resy );
+			const renderTargetHorizonal = new WebGLRenderTarget( resx, resy, { type: HalfFloatType } );
 
 			renderTargetHorizonal.texture.name = 'UnrealBloomPass.h' + i;
 			renderTargetHorizonal.texture.generateMipmaps = false;
 
 			this.renderTargetsHorizontal.push( renderTargetHorizonal );
 
-			const renderTargetVertical = new WebGLRenderTarget( resx, resy );
+			const renderTargetVertical = new WebGLRenderTarget( resx, resy, { type: HalfFloatType } );
 
 			renderTargetVertical.texture.name = 'UnrealBloomPass.v' + i;
 			renderTargetVertical.texture.generateMipmaps = false;
@@ -69,9 +70,6 @@ class UnrealBloomPass extends Pass {
 		}
 
 		// luminosity high pass material
-
-		if ( LuminosityHighPassShader === undefined )
-			console.error( 'THREE.UnrealBloomPass relies on LuminosityHighPassShader' );
 
 		const highPassShader = LuminosityHighPassShader;
 		this.highPassUniforms = UniformsUtils.clone( highPassShader.uniforms );
@@ -121,11 +119,6 @@ class UnrealBloomPass extends Pass {
 		this.compositeMaterial.uniforms[ 'bloomTintColors' ].value = this.bloomTintColors;
 
 		// copy material
-		if ( CopyShader === undefined ) {
-
-			console.error( 'THREE.UnrealBloomPass relies on CopyShader' );
-
-		}
 
 		const copyShader = CopyShader;
 
@@ -169,6 +162,22 @@ class UnrealBloomPass extends Pass {
 		}
 
 		this.renderTargetBright.dispose();
+
+		//
+
+		for ( let i = 0; i < this.separableBlurMaterials.length; i ++ ) {
+
+			this.separableBlurMaterials[ i ].dispose();
+
+		}
+
+		this.compositeMaterial.dispose();
+		this.materialCopy.dispose();
+		this.basic.dispose();
+
+		//
+
+		this.fsQuad.dispose();
 
 	}
 
@@ -354,7 +363,6 @@ class UnrealBloomPass extends Pass {
 				'blurTexture3': { value: null },
 				'blurTexture4': { value: null },
 				'blurTexture5': { value: null },
-				'dirtTexture': { value: null },
 				'bloomStrength': { value: 1.0 },
 				'bloomFactors': { value: null },
 				'bloomTintColors': { value: null },
@@ -375,7 +383,6 @@ class UnrealBloomPass extends Pass {
 				uniform sampler2D blurTexture3;
 				uniform sampler2D blurTexture4;
 				uniform sampler2D blurTexture5;
-				uniform sampler2D dirtTexture;
 				uniform float bloomStrength;
 				uniform float bloomRadius;
 				uniform float bloomFactors[NUM_MIPS];
