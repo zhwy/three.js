@@ -11,10 +11,6 @@
 
     <link rel="stylesheet" href="../resources/lesson.css">
     <link rel="stylesheet" href="../resources/lang.css">
-<!-- Import maps polyfill -->
-<!-- Remove this when import maps will be widely supported -->
-<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 <script type="importmap">
 {
   "imports": {
@@ -176,7 +172,7 @@ three.jsには <a href="lights.html">今後の記事</a> で紹介する多く�
 とりあえずディレクショナルライトを作成しましょう。</p>
 <pre class="prettyprint showlinemods notranslate lang-js" translate="no">{
   const color = 0xFFFFFF;
-  const intensity = 1;
+  const intensity = 3;
   const light = new THREE.DirectionalLight(color, intensity);
   light.position.set(-1, 2, 4);
   scene.add(light);
@@ -305,15 +301,15 @@ three.jsの場合、すべてのexamplesを正しいフォルダ階層に入れ�
 import {OrbitControls} from './someFolder/addons/controls/OrbitControls.js';
 </pre>
 <p>これにはCDNを使用する場合も含まれます。 <code class="notranslate" translate="no">three.modules.js</code> のパスが <code class="notranslate" translate="no">/build/three.modules.js</code> のようになってる事を確認して下さい。例えば</p>
-<pre class="prettyprint">import * as THREE from 'https://unpkg.com/three@&lt;version&gt;/<b>build/three.module.js</b>';
-import {OrbitControls} from 'https://unpkg.com/three@&lt;version&gt;/addons/controls/OrbitControls.js';
+<pre class="prettyprint">import * as THREE from 'https://cdn.jsdelivr.net/npm/three@&lt;version&gt;/<b>build/three.module.js</b>';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@&lt;version&gt;/addons/controls/OrbitControls.js';
 </pre>
 </div>
 
         </div>
       </div>
     </div>
-  
+
   <script src="../resources/prettify.js"></script>
   <script src="../resources/lesson.js"></script>
 

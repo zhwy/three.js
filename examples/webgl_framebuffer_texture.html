@@ -35,10 +35,6 @@
 			<div></div>
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -69,7 +65,6 @@
 			const color = new THREE.Color();
 
 			init();
-			animate();
 
 			function init() {
 
@@ -124,6 +119,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				renderer.autoClear = false;
 				document.body.appendChild( renderer.domElement );
 
@@ -173,8 +169,6 @@
 
 			function animate() {
 
-				requestAnimationFrame( animate );
-
 				const colorAttribute = line.geometry.getAttribute( 'color' );
 				updateColors( colorAttribute );
 
@@ -188,7 +182,7 @@
 				vector.x = ( window.innerWidth * dpr / 2 ) - ( textureSize / 2 );
 				vector.y = ( window.innerHeight * dpr / 2 ) - ( textureSize / 2 );
 
-				renderer.copyFramebufferToTexture( vector, texture );
+				renderer.copyFramebufferToTexture( texture, vector );
 
 				renderer.clearDepth();
 				renderer.render( sceneOrtho, cameraOrtho );

@@ -15,10 +15,6 @@
 		t: toggle HUD
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -63,8 +59,6 @@
 			let showHUD = false;
 
 			init();
-			animate();
-
 
 			function init() {
 
@@ -84,14 +78,16 @@
 
 				// LIGHTS
 
-				const ambient = new THREE.AmbientLight( 0x8d8d8d );
+				const ambient = new THREE.AmbientLight( 0xffffff );
 				scene.add( ambient );
 
-				light = new THREE.SpotLight( 0xffffff, 1, 0, Math.PI / 5, 0.3 );
+				light = new THREE.DirectionalLight( 0xffffff, 3 );
 				light.position.set( 0, 1500, 1000 );
-				light.target.position.set( 0, 0, 0 );
-
 				light.castShadow = true;
+				light.shadow.camera.top = 2000;
+				light.shadow.camera.bottom = - 2000;
+				light.shadow.camera.left = - 2000;
+				light.shadow.camera.right = 2000;
 				light.shadow.camera.near = 1200;
 				light.shadow.camera.far = 2500;
 				light.shadow.bias = 0.0001;
@@ -109,6 +105,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+				renderer.setAnimationLoop( animate );
 				container.appendChild( renderer.domElement );
 
 				renderer.autoClear = false;
@@ -124,7 +121,6 @@
 
 				controls.lookSpeed = 0.0125;
 				controls.movementSpeed = 500;
-				controls.noFly = false;
 				controls.lookVertical = true;
 
 				controls.lookAt( scene.position );
@@ -206,7 +202,7 @@
 						font: font,
 
 						size: 200,
-						height: 50,
+						depth: 50,
 						curveSegments: 12,
 
 						bevelThickness: 2,
@@ -336,8 +332,6 @@
 			}
 
 			function animate() {
-
-				requestAnimationFrame( animate );
 
 				render();
 				stats.update();

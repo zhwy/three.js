@@ -2,8 +2,9 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ViewHelper } from 'three/addons/helpers/ViewHelper.js';
 import { Element, LabelElement, SelectInput } from 'flow';
 import { BaseNodeEditor } from '../BaseNodeEditor.js';
-import { MeshBasicNodeMaterial, float } from 'three/nodes';
-import { WebGLRenderer, PerspectiveCamera, Scene, Mesh, DoubleSide, SphereGeometry, BoxGeometry, PlaneGeometry, TorusKnotGeometry } from 'three';
+import { MeshBasicNodeMaterial, vec4 } from 'three/tsl';
+import { PerspectiveCamera, Scene, Mesh, DoubleSide, SphereGeometry, BoxGeometry, PlaneGeometry, TorusKnotGeometry, WebGPURenderer } from 'three';
+import { setInputAestheticsFromType } from '../DataTypeLib.js';
 
 const sceneDict = {};
 
@@ -53,10 +54,10 @@ export class PreviewEditor extends BaseNodeEditor {
 		const width = 300;
 		const height = 300;
 
-		super( 'Preview', null, height );
+		super( 'Preview', null, width );
 
 		const material = new MeshBasicNodeMaterial();
-		material.colorNode = float();
+		material.colorNode = vec4( 0, 0, 0, 1 );
 		material.side = DoubleSide;
 		material.transparent = true;
 
@@ -74,9 +75,9 @@ export class PreviewEditor extends BaseNodeEditor {
 			{ name: 'Torus', value: 'torus' }
 		], 'box' );
 
-		const inputElement = new LabelElement( 'Input' ).setInput( 4 ).onConnect( () => {
+		const inputElement = setInputAestheticsFromType( new LabelElement( 'Input' ), 'Color' ).onConnect( () => {
 
-			material.colorNode = inputElement.getLinkedObject() || float();
+			material.colorNode = inputElement.getLinkedObject() || vec4( 0, 0, 0, 1 );
 			material.dispose();
 
 		}, true );
@@ -88,9 +89,10 @@ export class PreviewEditor extends BaseNodeEditor {
 
 		previewElement.dom.addEventListener( 'wheel', e => e.stopPropagation() );
 
-		const renderer = new WebGLRenderer( {
+		const renderer = new WebGPURenderer( {
 			canvas,
-			alpha: true
+			alpha: true,
+			antialias: true
 		} );
 
 		renderer.autoClear = false;
@@ -139,7 +141,7 @@ export class PreviewEditor extends BaseNodeEditor {
 
 	}
 
-	update() {
+	async update() {
 
 		const { viewHelper, material, renderer, camera, sceneInput } = this;
 
@@ -158,8 +160,8 @@ export class PreviewEditor extends BaseNodeEditor {
 
 		}
 
-		renderer.clear();
-		renderer.render( scene, camera );
+		await renderer.clearAsync();
+		await renderer.renderAsync( scene, camera );
 
 		viewHelper.render( renderer );
 

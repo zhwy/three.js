@@ -68,10 +68,6 @@
 
 		</script>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -92,7 +88,6 @@
 			let mouse, center;
 
 			init();
-			animate();
 
 			function init() {
 
@@ -170,6 +165,7 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				container.appendChild( renderer.domElement );
 
 				mouse = new THREE.Vector3( 0, 0, 1 );
@@ -199,14 +195,6 @@
 			}
 
 			function animate() {
-
-				requestAnimationFrame( animate );
-
-				render();
-
-			}
-
-			function render() {
 
 				camera.position.x += ( mouse.x - camera.position.x ) * 0.05;
 				camera.position.y += ( - mouse.y - camera.position.y ) * 0.05;

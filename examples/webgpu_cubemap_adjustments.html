@@ -14,16 +14,12 @@
 			<a href="https://sketchfab.com/theblueturtle_" target="_blank" rel="noopener">theblueturtle_</a><br />
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
-					"three": "../build/three.module.js",
-					"three/addons/": "./jsm/",
-					"three/nodes": "./jsm/nodes/Nodes.js"
+					"three": "../build/three.webgpu.js",
+					"three/tsl": "../build/three.webgpu.js",
+					"three/addons/": "./jsm/"
 				}
 			}
 		</script>
@@ -31,10 +27,7 @@
 		<script type="module">
 
 			import * as THREE from 'three';
-			import { uniform, mix, cubeTexture, reference, positionLocal, positionWorld, normalWorld, positionWorldDirection, reflectVector, toneMapping } from 'three/nodes';
-
-			import WebGPU from 'three/addons/capabilities/WebGPU.js';
-			import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js';
+			import { uniform, mix, pmremTexture, reference, positionLocal, hue, saturation, positionWorld, normalWorld, positionWorldDirection, reflectVector } from 'three/tsl';
 
 			import { RGBMLoader } from 'three/addons/loaders/RGBMLoader.js';
 
@@ -47,15 +40,7 @@
 
 			init();
 
-			function init() {
-
-				if ( WebGPU.isAvailable() === false ) {
-
-					document.body.appendChild( WebGPU.getErrorMessage() );
-
-					throw new Error( 'No WebGPU support' );
-
-				}
+			async function init() {
 
 				const container = document.createElement( 'div' );
 				document.body.appendChild( container );
@@ -70,18 +55,18 @@
 				// cube textures
 
 				const rgbmUrls = [ 'px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png' ];
-				const cube1Texture = new RGBMLoader()
+				const cube1Texture = await new RGBMLoader()
 					.setMaxRange( 16 )
 					.setPath( './textures/cube/pisaRGBM16/' )
-					.loadCubemap( rgbmUrls );
+					.loadCubemapAsync( rgbmUrls );
 
 				cube1Texture.generateMipmaps = true;
 				cube1Texture.minFilter = THREE.LinearMipmapLinearFilter;
 
 				const cube2Urls = [ 'posx.jpg', 'negx.jpg', 'posy.jpg', 'negy.jpg', 'posz.jpg', 'negz.jpg' ];
-				const cube2Texture = new THREE.CubeTextureLoader()
+				const cube2Texture = await new THREE.CubeTextureLoader()
 					.setPath( './textures/cube/Park2/' )
-					.load( cube2Urls );
+					.loadAsync( cube2Urls );
 
 				cube2Texture.generateMipmaps = true;
 				cube2Texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -109,13 +94,13 @@
 
 					const custom1UV = reflectNode.xyz.mul( uniform( rotateY1Matrix ) );
 					const custom2UV = reflectNode.xyz.mul( uniform( rotateY2Matrix ) );
-					const mixCubeMaps = mix( cubeTexture( cube1Texture, custom1UV ), cubeTexture( cube2Texture, custom2UV ), positionNode.y.add( mixNode ).clamp() );
+					const mixCubeMaps = mix( pmremTexture( cube1Texture, custom1UV ), pmremTexture( cube2Texture, custom2UV ), positionNode.y.add( mixNode ).clamp() );
 
 					const proceduralEnv = mix( mixCubeMaps, normalWorld, proceduralNode );
 
 					const intensityFilter = proceduralEnv.mul( intensityNode );
-					const hueFilter = intensityFilter.hue( hueNode );
-					return hueFilter.saturation( saturationNode );
+					const hueFilter = hue( intensityFilter, hueNode );
+					return saturation( hueFilter, saturationNode );
 
 				};
 
@@ -124,17 +109,15 @@
 				scene.environmentNode = getEnvironmentNode( reflectVector, positionWorld );
 
 				scene.backgroundNode = getEnvironmentNode( positionWorldDirection, positionLocal ).context( {
-					getSamplerLevelNode: () => blurNode
+					getTextureLevel: () => blurNode
 				} );
 
 				// scene objects
 
 				const loader = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
-				loader.load( 'DamagedHelmet.gltf', function ( gltf ) {
+				const gltf = await loader.loadAsync( 'DamagedHelmet.gltf' );
 
-					scene.add( gltf.scene );
-
-				} );
+				scene.add( gltf.scene );
 
 				const sphereGeometry = new THREE.SphereGeometry( .5, 64, 32 );
 
@@ -149,10 +132,10 @@
 
 				// renderer and controls
 
-				renderer = new WebGPURenderer();
+				renderer = new THREE.WebGPURenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.toneMappingNode = toneMapping( THREE.LinearToneMapping, 1 );
+				renderer.toneMapping = THREE.LinearToneMapping;
 				renderer.setAnimationLoop( render );
 				container.appendChild( renderer.domElement );
 

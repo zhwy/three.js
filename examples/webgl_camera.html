@@ -16,10 +16,6 @@
 		<b>O</b> orthographic <b>P</b> perspective
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -47,7 +43,6 @@
 			const frustumSize = 600;
 
 			init();
-			animate();
 
 			function init() {
 
@@ -135,9 +130,10 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+				renderer.setAnimationLoop( animate );
 				container.appendChild( renderer.domElement );
 
-				renderer.autoClear = false;
+				renderer.setScissorTest( true );
 
 				//
 
@@ -203,8 +199,6 @@
 
 			function animate() {
 
-				requestAnimationFrame( animate );
-
 				render();
 				stats.update();
 
@@ -247,20 +241,25 @@
 
 				cameraRig.lookAt( mesh.position );
 
-				renderer.clear();
+				//
 
 				activeHelper.visible = false;
 
+				renderer.setClearColor( 0x000000, 1 );
+				renderer.setScissor( 0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
 				renderer.setViewport( 0, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
 				renderer.render( scene, activeCamera );
 
+				//
+
 				activeHelper.visible = true;
 
+				renderer.setClearColor( 0x111111, 1 );
+				renderer.setScissor( SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
 				renderer.setViewport( SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT );
 				renderer.render( scene, camera );
 
 			}
-
 
 		</script>
 

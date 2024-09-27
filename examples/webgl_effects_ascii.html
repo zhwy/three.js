@@ -10,10 +10,6 @@
 	<body>
 		<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - effects - ascii</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -37,7 +33,6 @@
 			const start = Date.now();
 
 			init();
-			animate();
 
 			function init() {
 
@@ -48,11 +43,11 @@
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0, 0, 0 );
 
-				const pointLight1 = new THREE.PointLight( 0xffffff );
+				const pointLight1 = new THREE.PointLight( 0xffffff, 3, 0, 0 );
 				pointLight1.position.set( 500, 500, 500 );
 				scene.add( pointLight1 );
 
-				const pointLight2 = new THREE.PointLight( 0xffffff, 0.25 );
+				const pointLight2 = new THREE.PointLight( 0xffffff, 1, 0, 0 );
 				pointLight2.position.set( - 500, - 500, - 500 );
 				scene.add( pointLight2 );
 
@@ -68,6 +63,7 @@
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 
 				effect = new AsciiEffect( renderer, ' .:-+*=%@#', { invert: true } );
 				effect.setSize( window.innerWidth, window.innerHeight );
@@ -100,14 +96,6 @@
 			//
 
 			function animate() {
-
-				requestAnimationFrame( animate );
-
-				render();
-
-			}
-
-			function render() {
 
 				const timer = Date.now() - start;
 

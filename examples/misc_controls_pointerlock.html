@@ -42,10 +42,6 @@
 			</div>
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -80,7 +76,6 @@
 			const color = new THREE.Color();
 
 			init();
-			animate();
 
 			function init() {
 
@@ -91,7 +86,7 @@
 				scene.background = new THREE.Color( 0xffffff );
 				scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
 
-				const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
+				const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 2.5 );
 				light.position.set( 0.5, 1, 0.75 );
 				scene.add( light );
 
@@ -120,7 +115,7 @@
 
 				} );
 
-				scene.add( controls.getObject() );
+				scene.add( controls.object );
 
 				const onKeyDown = function ( event ) {
 
@@ -264,6 +259,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				document.body.appendChild( renderer.domElement );
 
 				//
@@ -283,13 +279,11 @@
 
 			function animate() {
 
-				requestAnimationFrame( animate );
-
 				const time = performance.now();
 
 				if ( controls.isLocked === true ) {
 
-					raycaster.ray.origin.copy( controls.getObject().position );
+					raycaster.ray.origin.copy( controls.object.position );
 					raycaster.ray.origin.y -= 10;
 
 					const intersections = raycaster.intersectObjects( objects, false );
@@ -320,12 +314,12 @@
 					controls.moveRight( - velocity.x * delta );
 					controls.moveForward( - velocity.z * delta );
 
-					controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+					controls.object.position.y += ( velocity.y * delta ); // new behavior
 
-					if ( controls.getObject().position.y < 10 ) {
+					if ( controls.object.position.y < 10 ) {
 
 						velocity.y = 0;
-						controls.getObject().position.y = 10;
+						controls.object.position.y = 10;
 
 						canJump = true;
 

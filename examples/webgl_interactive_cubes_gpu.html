@@ -23,10 +23,6 @@
 
 		<div id="container"></div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -57,7 +53,6 @@
 			const clearColor = new THREE.Color();
 
 			init();
-			animate();
 
 			function init() {
 
@@ -69,9 +64,9 @@
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0xffffff );
 
-				scene.add( new THREE.AmbientLight( 0x555555 ) );
+				scene.add( new THREE.AmbientLight( 0xcccccc ) );
 
-				const light = new THREE.SpotLight( 0xffffff, 1.5 );
+				const light = new THREE.DirectionalLight( 0xffffff, 3 );
 				light.position.set( 0, 500, 2000 );
 				scene.add( light );
 
@@ -205,6 +200,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				container.appendChild( renderer.domElement );
 
 				controls = new TrackballControls( camera, renderer.domElement );
@@ -233,8 +229,6 @@
 			}
 
 			function animate() {
-
-				requestAnimationFrame( animate );
 
 				render();
 				stats.update();
@@ -267,23 +261,27 @@
 				const pixelBuffer = new Int32Array( 4 );
 
 				// read the pixel
-				renderer.readRenderTargetPixels( pickingTexture, 0, 0, 1, 1, pixelBuffer );
+				renderer
+					.readRenderTargetPixelsAsync( pickingTexture, 0, 0, 1, 1, pixelBuffer )
+					.then( () => {
 
-				const id = pixelBuffer[ 0 ];
-				if ( id !== - 1 ) {
+						const id = pixelBuffer[ 0 ];
+						if ( id !== - 1 ) {
 
-					// move our highlightBox so that it surrounds the picked object
-					const data = pickingData[ id ];
-					highlightBox.position.copy( data.position );
-					highlightBox.rotation.copy( data.rotation );
-					highlightBox.scale.copy( data.scale ).add( offset );
-					highlightBox.visible = true;
+							// move our highlightBox so that it surrounds the picked object
+							const data = pickingData[ id ];
+							highlightBox.position.copy( data.position );
+							highlightBox.rotation.copy( data.rotation );
+							highlightBox.scale.copy( data.scale ).add( offset );
+							highlightBox.visible = true;
 
-				} else {
+						} else {
 
-					highlightBox.visible = false;
+							highlightBox.visible = false;
 
-				}
+						}
+
+					} );
 
 			}
 

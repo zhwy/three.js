@@ -11,10 +11,6 @@
 		<div id="container"></div>
 		<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - Toon Material with OutlineEffect</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -44,7 +40,6 @@
 			loader.load( 'fonts/gentilis_regular.typeface.json', function ( font ) {
 
 				init( font );
-				animate();
 
 			} );
 
@@ -66,6 +61,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				container.appendChild( renderer.domElement );
 
 				// Materials
@@ -74,7 +70,6 @@
 				const numberOfSphersPerSide = 5;
 				const sphereRadius = ( cubeWidth / numberOfSphersPerSide ) * 0.8 * 0.5;
 				const stepSize = 1.0 / numberOfSphersPerSide;
-				const format = ( renderer.capabilities.isWebGL2 ) ? THREE.RedFormat : THREE.LuminanceFormat;
 
 				const geometry = new THREE.SphereGeometry( sphereRadius, 32, 16 );
 
@@ -88,7 +83,7 @@
 
 					}
 
-					const gradientMap = new THREE.DataTexture( colors, colors.length, 1, format );
+					const gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.RedFormat );
 					gradientMap.needsUpdate = true;
 
 					for ( let beta = 0; beta <= 1.0; beta += stepSize ) {
@@ -124,7 +119,7 @@
 						font: font,
 
 						size: 20,
-						height: 1,
+						depth: 1,
 						curveSegments: 1
 
 					} );
@@ -150,9 +145,9 @@
 
 				// Lights
 
-				scene.add( new THREE.AmbientLight( 0xc1c1c1 ) );
+				scene.add( new THREE.AmbientLight( 0xc1c1c1, 3 ) );
 
-				const pointLight = new THREE.PointLight( 0xffffff, 2, 800 );
+				const pointLight = new THREE.PointLight( 0xffffff, 2, 800, 0 );
 				particleLight.add( pointLight );
 
 				//
@@ -184,8 +179,6 @@
 			//
 
 			function animate() {
-
-				requestAnimationFrame( animate );
 
 				stats.begin();
 				render();

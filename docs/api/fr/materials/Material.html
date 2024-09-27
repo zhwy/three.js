@@ -29,6 +29,14 @@
 
 		<h2>Propriétés</h2>
 
+		<h3>[property:Boolean alphaHash]</h3>
+		<p>
+			Enables alpha hashed transparency, an alternative to [page:.transparent] or [page:.alphaTest].
+			The material will not be rendered if opacity is lower than a random threshold.
+			Randomization introduces some grain or noise, but approximates alpha blending without
+			the associated problems of sorting. Using TAARenderPass can reduce the resulting noise.
+		</p>
+
 		<h3>[property:Float alphaTest]</h3>
 		<p>
 		Définit la valeur alpha à utiliser lors de l'exécution d'un test alpha.
@@ -346,6 +354,24 @@
 		</p>
 		<p>
 			Contrairement aux propriétés, le callback n'est pas pris en charge par [page:Material.clone .clone](), [page:Material.copy .copy]() et [page:Material.toJSON .toJSON]().
+		</p>
+		<p>
+			This callback is only supported in `WebGLRenderer` (not `WebGPURenderer`). 
+		</p>
+
+		<h3>
+			[method:undefined onBeforeRender]( [param:WebGLRenderer renderer], [param:Scene scene], [param:Camera camera], [param:BufferGeometry geometry], [param:Object3D object], [param:Group group] )
+		</h3>
+		<p>
+			An optional callback that is executed immediately before the material is used to 
+			render a 3D object.
+		</p>
+		<p>
+			Unlike properties, the callback is not supported by [page:Material.clone .clone](), 
+			[page:Material.copy .copy]() and [page:Material.toJSON .toJSON]().
+		</p>
+		<p>
+			This callback is only supported in `WebGLRenderer` (not `WebGPURenderer`). 
 		</p>
 
 		<h3>[method:String customProgramCacheKey]()</h3>

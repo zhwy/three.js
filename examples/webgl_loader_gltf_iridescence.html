@@ -14,10 +14,6 @@
 			<a href="https://hdrihaven.com/hdri/?h=venice_sunset" target="_blank" rel="noopener">Venice Sunset</a> from <a href="https://hdrihaven.com/" target="_blank" rel="noopener">HDRI Haven</a>
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -46,7 +42,7 @@
 			async function init() {
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setAnimationLoop( render );
+				renderer.setAnimationLoop( animate );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -84,8 +80,6 @@
 
 				scene.add( gltf.scene );
 
-				render();
-
 				window.addEventListener( 'resize', onWindowResize );
 
 			}
@@ -98,11 +92,9 @@
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
-				render();
-
 			}
 
-			function render() {
+			function animate() {
 
 				controls.update();
 				renderer.render( scene, camera );

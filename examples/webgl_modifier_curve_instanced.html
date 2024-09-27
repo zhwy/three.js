@@ -14,10 +14,6 @@
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - curve modifier - instanced
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -49,7 +45,6 @@
 				action = ACTION_NONE;
 
 			init();
-			animate();
 
 			function init() {
 
@@ -112,13 +107,11 @@
 
 				//
 
-				const light = new THREE.DirectionalLight( 0xffaa33 );
+				const light = new THREE.DirectionalLight( 0xffaa33, 3 );
 				light.position.set( - 10, 10, 10 );
-				light.intensity = 1.0;
 				scene.add( light );
 
-				const light2 = new THREE.AmbientLight( 0x003973 );
-				light2.intensity = 1.0;
+				const light2 = new THREE.AmbientLight( 0x003973, 3 );
 				scene.add( light2 );
 
 				//
@@ -129,7 +122,7 @@
 					const geometry = new TextGeometry( 'Hello three.js!', {
 						font: font,
 						size: 0.2,
-						height: 0.05,
+						depth: 0.05,
 						curveSegments: 12,
 						bevelEnabled: true,
 						bevelThickness: 0.02,
@@ -170,6 +163,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				document.body.appendChild( renderer.domElement );
 
 				renderer.domElement.addEventListener( 'pointerdown', onPointerDown );
@@ -218,8 +212,6 @@
 
 			function animate() {
 
-				requestAnimationFrame( animate );
-
 				if ( action === ACTION_SELECT ) {
 
 					rayCaster.setFromCamera( mouse, camera );
@@ -229,7 +221,7 @@
 
 						const target = intersects[ 0 ].object;
 						control.attach( target );
-						scene.add( control );
+						scene.add( control.getHelper() );
 
 					}
 

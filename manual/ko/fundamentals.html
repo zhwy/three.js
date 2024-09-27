@@ -11,10 +11,6 @@
 
     <link rel="stylesheet" href="../resources/lesson.css">
     <link rel="stylesheet" href="../resources/lang.css">
-<!-- Import maps polyfill -->
-<!-- Remove this when import maps will be widely supported -->
-<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 <script type="importmap">
 {
   "imports": {
@@ -250,7 +246,7 @@ Three.js에는 다양한 종류의 광원이 있습니다. 다 살펴보기 힘�
 <a href="/docs/#api/ko/lights/DirectionalLight"><code class="notranslate" translate="no">DirectionalLight</code></a>를 사용해보도록 하죠.</p>
 <pre class="prettyprint showlinemods notranslate lang-js" translate="no">{
   const color = 0xFFFFFF;
-  const intensity = 1;
+  const intensity = 3;
   const light = new THREE.DirectionalLight(color, intensity);
   light.position.set(-1, 2, 4);
   scene.add(light);
@@ -393,8 +389,8 @@ import {OrbitControls} from './someFolder/addons/controls/OrbitControls.js';
 </pre>
 <p>아래는 CDN을 사용하는 예시입니다. <code class="notranslate" translate="no">three.modules.js</code>의 경로가 <code class="notranslate" translate="no">/build/three.modules.js</code>
 로 끝나야 한다는 것을 명심하세요.</p>
-<pre class="prettyprint">import * as THREE from 'https://unpkg.com/three@&lt;version&gt;/<b>build/three.module.js</b>';
-import {OrbitControls} from 'https://unpkg.com/three@&lt;version&gt;/addons/controls/OrbitControls.js';
+<pre class="prettyprint">import * as THREE from 'https://cdn.jsdelivr.net/npm/three@&lt;version&gt;/<b>build/three.module.js</b>';
+import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@&lt;version&gt;/addons/controls/OrbitControls.js';
 </pre>
 </div>
         </div>

@@ -12,10 +12,6 @@
 		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - VRML loader
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -51,6 +47,7 @@
 				'extrusion2',
 				'extrusion3',
 				'lines',
+				'linesTransparent',
 				'meshWithLines',
 				'meshWithTexture',
 				'pixelTexture',
@@ -60,7 +57,6 @@
 			let vrmlScene;
 
 			init();
-			animate();
 
 			function init() {
 
@@ -72,10 +68,10 @@
 
 				// light
 
-				const ambientLight = new THREE.AmbientLight( 0xffffff, 0.4 );
+				const ambientLight = new THREE.AmbientLight( 0xffffff, 1.2 );
 				scene.add( ambientLight );
 
-				const dirLight = new THREE.DirectionalLight( 0xffffff, 0.6 );
+				const dirLight = new THREE.DirectionalLight( 0xffffff, 2.0 );
 				dirLight.position.set( 200, 200, 200 );
 				scene.add( dirLight );
 
@@ -87,6 +83,7 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				document.body.appendChild( renderer.domElement );
 
 				// controls
@@ -152,8 +149,6 @@
 			}
 
 			function animate() {
-
-				requestAnimationFrame( animate );
 
 				controls.update(); // to support damping
 

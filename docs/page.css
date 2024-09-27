@@ -74,7 +74,8 @@ body.rtl ol,
 body.rtl table {
 	direction: rtl !important;
 }
-body.rtl code {
+body.rtl code,
+body.rtl .RtlTitle {
 	direction: ltr !important;
 	text-align: initial;
 }
@@ -119,6 +120,10 @@ ul,
 summary {
 	margin-top: 16px;
 	margin-bottom: 16px;
+}
+
+summary:hover {
+	cursor: pointer;
 }
 
 p {

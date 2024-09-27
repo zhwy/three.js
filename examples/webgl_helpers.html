@@ -11,10 +11,6 @@
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - helpers
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -39,13 +35,13 @@
 			let vth;
 
 			init();
-			animate();
 
 			function init() {
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				document.body.appendChild( renderer.domElement );
 
 				//
@@ -135,8 +131,6 @@
 			}
 
 			function animate() {
-
-				requestAnimationFrame( animate );
 
 				const time = - performance.now() * 0.0003;
 

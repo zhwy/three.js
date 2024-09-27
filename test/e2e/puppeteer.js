@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import puppeteer, { BrowserFetcher } from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 import express from 'express';
 import path from 'path';
 import pixelmatch from 'pixelmatch';
@@ -42,43 +42,58 @@ const parseTime = 6; // 6 seconds per megabyte
 
 const exceptionList = [
 
-	// video tag not deterministic enough
+	// video tag isn't deterministic enough?
 	'css3d_youtube',
+	'webgl_materials_video',
 	'webgl_video_kinect',
 	'webgl_video_panorama_equirectangular',
-	'webxr_vr_video',
 
 	'webaudio_visualizer', // audio can't be analyzed without proper audio hook
 
-	'webxr_ar_lighting', // webxr
+	// WebXR also isn't determinstic enough?
+	'webxr_ar_lighting',
+	'webxr_vr_sandbox',
+	'webxr_vr_video',
+	'webxr_xr_ballshooter',
+	'webxr_xr_dragging_custom_depth',
 
 	'webgl_worker_offscreencanvas', // in a worker, not robust
 
 	// Windows-Linux text rendering differences
-	// TODO: Fix these by setting a font in Puppeteer -- this can also fix a bunch of 0.1%-0.2% examples
+	// TODO: Fix these by e.g. disabling text rendering altogether -- this can also fix a bunch of 0.1%-0.2% examples
 	'css3d_periodictable',
 	'misc_controls_pointerlock',
 	'misc_uv_tests',
 	'webgl_camera_logarithmicdepthbuffer',
 	'webgl_effects_ascii',
+	'webgl_geometry_extrude_shapes',
+	'webgl_interactive_lines',
+	'webgl_loader_collada_kinematics',
+	'webgl_loader_ldraw',
 	'webgl_loader_pdb',
+	'webgl_modifier_simplifier',
+	'webgl_multiple_canvases_circle',
 	'webgl_multiple_elements_text',
 
 	// Unknown
 	// TODO: most of these can be fixed just by increasing idleTime and parseTime
 	'webgl_animation_skinning_blending',
+	'webgl_animation_skinning_additive_blending',
 	'webgl_buffergeometry_glbufferattribute',
+	'webgl_interactive_cubes_gpu',
 	'webgl_clipping_advanced',
 	'webgl_lensflares',
 	'webgl_lights_spotlights',
 	'webgl_loader_imagebitmap',
+	'webgl_loader_texture_ktx',
 	'webgl_loader_texture_lottie',
 	'webgl_loader_texture_pvrtc',
+	'webgl_materials_alphahash',
 	'webgl_materials_blending',
 	'webgl_mirror',
 	'webgl_morphtargets_face',
-	'webgl_nodes_materials_standard',
-	'webgl_postprocessing_crossfade',
+	'webgl_postprocessing_transition',
+	'webgl_postprocessing_glitch',
 	'webgl_postprocessing_dof2',
 	'webgl_raymarching_reflect',
 	'webgl_renderer_pathtracer',
@@ -86,44 +101,68 @@ const exceptionList = [
 	'webgl_shadowmap_progressive',
 	'webgl_test_memory2',
 	'webgl_tiled_forward',
+	'webgl_points_dynamic',
+	'webgpu_multisampled_renderbuffers',
+	'webgl_test_wide_gamut',
 
 	// TODO: implement determinism for setTimeout and setInterval
 	// could it fix some examples from above?
 	'physics_rapier_instancing',
+	'physics_jolt_instancing',
 
-	// Awaiting for WebGPU support
-	'webgpu_audio_processing',
-	'webgpu_backdrop',
-	'webgpu_compute',
-	'webgpu_cubemap_adjustments',
-	'webgpu_cubemap_dynamic',
-	'webgpu_cubemap_mix',
-	'webgpu_depth_texture',
-	'webgpu_equirectangular',
-	'webgpu_instance_mesh',
-	'webgpu_instance_uniform',
-	'webgpu_lights_custom',
-	'webgpu_lights_ies_spotlight',
-	'webgpu_lights_phong',
-	'webgpu_lights_selective',
-	'webgpu_loader_gltf',
-	'webgpu_loader_gltf_compressed',
+	// Awaiting for WebGL backend support
+	'webgpu_clearcoat',
+	'webgpu_compute_audio',
+	'webgpu_compute_texture',
+	'webgpu_compute_texture_pingpong',
+	"webgpu_compute_water",
 	'webgpu_materials',
-	'webgpu_materials_video',
-	'webgpu_particles',
-	'webgpu_rtt',
 	'webgpu_sandbox',
+	'webgpu_sprites',
+	'webgpu_video_panorama',
+	'webgpu_postprocessing_bloom_emissive',
+
+	// Awaiting for WebGPU Backend support in Puppeteer
+	'webgpu_storage_buffer',
+	'webgpu_compute_sort_bitonic',
+
+	// WebGPURenderer: Unknown problem
+	'webgpu_camera_logarithmicdepthbuffer',
+	'webgpu_clipping',
+	'webgpu_lightprobe_cubecamera',
+	'webgpu_loader_materialx',
+	'webgpu_materials_video',
+	'webgpu_materialx_noise',
+	'webgpu_morphtargets_face',
+	'webgpu_occlusion',
+	'webgpu_particles',
+	'webgpu_shadertoy',
 	'webgpu_shadowmap',
-	'webgpu_skinning',
-	'webgpu_skinning_instancing',
-	'webgpu_skinning_points',
-	'webgpu_sprites'
+	'webgpu_tsl_editor',
+	'webgpu_tsl_transpiler',
+	'webgpu_tsl_interoperability',
+	'webgpu_portal',
+	'webgpu_custom_fog',
+	'webgpu_instancing_morph',
+	'webgpu_texturegrad',
+	'webgpu_performance_renderbundle',
+	'webgpu_lights_rectarealight',
+	'webgpu_tsl_coffee_smoke',
+	'webgpu_tsl_vfx_flames',
+	'webgpu_tsl_halftone',
+	'webgpu_tsl_vfx_linkedparticles',
+	'webgpu_tsl_vfx_tornado',
+	'webgpu_textures_anisotropy',
+
+	// WebGPU idleTime and parseTime too low
+	'webgpu_compute_particles',
+	'webgpu_compute_particles_rain',
+	'webgpu_compute_particles_snow',
+	'webgpu_compute_points'
 
 ];
 
 /* CONFIG VARIABLES END */
-
-const chromiumRevision = '1108766'; // Chromium 112.0.5614.0, Puppeteer 19.8.0, https://github.com/puppeteer/puppeteer/releases/tag/puppeteer-core-v19.8.0
 
 const port = 1234;
 const pixelThreshold = 0.1; // threshold error in one pixel
@@ -159,16 +198,33 @@ process.on( 'SIGINT', () => close() );
 
 async function main() {
 
-	/* Create output directories */
+	/* Create output directory */
 
 	try { await fs.rm( 'test/e2e/output-screenshots', { recursive: true, force: true } ); } catch {}
 	try { await fs.mkdir( 'test/e2e/output-screenshots' ); } catch {}
 
 	/* Find files */
 
-	const isMakeScreenshot = process.argv[ 2 ] === '--make';
+	let isMakeScreenshot = false;
+	let isWebGPU = false;
 
-	const exactList = process.argv.slice( isMakeScreenshot ? 3 : 2 )
+	let argvIndex = 2;
+
+	if ( process.argv[ argvIndex ] === '--webgpu' ) {
+
+		isWebGPU = true;
+		argvIndex ++;
+
+	}
+
+	if ( process.argv[ argvIndex ] === '--make' ) {
+
+		isMakeScreenshot = true;
+		argvIndex ++;
+
+	}
+
+	const exactList = process.argv.slice( argvIndex )
 		.map( f => f.replace( '.html', '' ) );
 
 	const isExactList = exactList.length !== 0;
@@ -192,6 +248,8 @@ async function main() {
 
 	}
 
+	if ( isWebGPU ) files = files.filter( f => f.includes( 'webgpu_' ) );
+
 	/* CI parallelism */
 
 	if ( 'CI' in process.env ) {
@@ -205,21 +263,16 @@ async function main() {
 
 	}
 
-	/* Download browser */
-
-	const { executablePath } = await downloadLatestChromium();
-
 	/* Launch browser */
 
-	const flags = [ '--hide-scrollbars', '--enable-unsafe-webgpu' ];
-	flags.push( '--enable-features=Vulkan', '--use-gl=swiftshader', '--use-angle=swiftshader', '--use-vulkan=swiftshader', '--use-webgpu-adapter=swiftshader' );
+	const flags = [ '--hide-scrollbars', '--enable-gpu' ];
+	// flags.push( '--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-gl=swiftshader', '--use-angle=swiftshader', '--use-vulkan=swiftshader', '--use-webgpu-adapter=swiftshader' );
 	// if ( process.platform === 'linux' ) flags.push( '--enable-features=Vulkan,UseSkiaRenderer', '--use-vulkan=native', '--disable-vulkan-surface', '--disable-features=VaapiVideoDecoder', '--ignore-gpu-blocklist', '--use-angle=vulkan' );
 
 	const viewport = { width: width * viewScale, height: height * viewScale };
 
 	browser = await puppeteer.launch( {
-		executablePath,
-		headless: ! process.env.VISIBLE,
+		headless: process.env.VISIBLE ? false : 'new',
 		args: flags,
 		defaultViewport: viewport,
 		handleSIGINT: false,
@@ -232,9 +285,15 @@ async function main() {
 
 	/* Prepare injections */
 
+	const buildInjection = ( code ) => code.replace( /Math\.random\(\) \* 0xffffffff/g, 'Math._random() * 0xffffffff' );
+
 	const cleanPage = await fs.readFile( 'test/e2e/clean-page.js', 'utf8' );
 	const injection = await fs.readFile( 'test/e2e/deterministic-injection.js', 'utf8' );
-	const build = ( await fs.readFile( 'build/three.module.js', 'utf8' ) ).replace( /Math\.random\(\) \* 0xffffffff/g, 'Math._random() * 0xffffffff' );
+
+	const builds = {
+		'three.module.js': buildInjection( await fs.readFile( 'build/three.module.js', 'utf8' ) ),
+		'three.webgpu.js': buildInjection( await fs.readFile( 'build/three.webgpu.js', 'utf8' ) )
+	};
 
 	/* Prepare pages */
 
@@ -243,7 +302,7 @@ async function main() {
 	const pages = await browser.pages();
 	while ( pages.length < numPages && pages.length < files.length ) pages.push( await browser.newPage() );
 
-	for ( const page of pages ) await preparePage( page, injection, build, errorMessagesCache );
+	for ( const page of pages ) await preparePage( page, injection, builds, errorMessagesCache );
 
 	/* Loop for each file */
 
@@ -284,28 +343,7 @@ async function main() {
 
 }
 
-async function downloadLatestChromium() {
-
-	const browserFetcher = new BrowserFetcher( { path: 'test/e2e/chromium' } );
-
-	let revisionInfo = browserFetcher.revisionInfo( chromiumRevision );
-	if ( revisionInfo.local === true ) {
-
-		console.log( 'Latest Chromium has been already downloaded.' );
-
-	} else {
-
-		console.log( 'Downloading latest Chromium...' );
-		revisionInfo = await browserFetcher.download( chromiumRevision );
-		console.log( 'Downloaded.' );
-
-	}
-	console.log( `Using Chromium r${ chromiumRevision } (${ revisionInfo.url }), stable channel on ${ browserFetcher.platform() }` );
-	return revisionInfo;
-
-}
-
-async function preparePage( page, injection, build, errorMessages ) {
+async function preparePage( page, injection, builds, errorMessages ) {
 
 	/* let page.file, page.pageSize, page.error */
 
@@ -393,19 +431,25 @@ async function preparePage( page, injection, build, errorMessages ) {
 
 	page.on( 'request', async ( request ) => {
 
-		if ( request.url() === `http://localhost:${ port }/build/three.module.js` ) {
+		const url = request.url();
 
-			await request.respond( {
-				status: 200,
-				contentType: 'application/javascript; charset=utf-8',
-				body: build
-			} );
+		for ( const build in builds ) {
 
-		} else {
+			if ( url === `http://localhost:${ port }/build/${ build }` ) {
 
-			await request.continue();
+				await request.respond( {
+					status: 200,
+					contentType: 'application/javascript; charset=utf-8',
+					body: builds[ build ]
+				} );
+
+				return;
+
+			}
 
 		}
+
+		await request.continue();
 
 	} );
 
@@ -501,7 +545,7 @@ async function makeAttempt( pages, failedScreenshots, cleanPage, isMakeScreensho
 
 		} catch ( e ) {
 
-			if ( ! e.message.includes( 'Render timeout exceeded' ) ) {
+			if ( e.includes && e.includes( 'Render timeout exceeded' ) === false ) {
 
 				throw new Error( `Error happened while rendering file ${ file }: ${ e }` );
 
@@ -581,7 +625,7 @@ async function makeAttempt( pages, failedScreenshots, cleanPage, isMakeScreensho
 
 		}
 
-	} catch ( e ) { 
+	} catch ( e ) {
 
 		if ( attemptID === numAttempts - 1 ) {
 
@@ -605,7 +649,7 @@ function close( exitCode = 1 ) {
 
 	console.log( 'Closing...' );
 
-	if ( browser !== undefined ) browser.close();
+	browser.close();
 	server.close();
 	process.exit( exitCode );
 

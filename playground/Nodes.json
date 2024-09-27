@@ -57,7 +57,7 @@
 						{
 							"name": "Camera Normal Matrix",
 							"icon": "video",
-							"nodeType": "mat4",
+							"nodeType": "mat3",
 							"shaderNode": "cameraNormalMatrix"
 						},
 						{
@@ -86,90 +86,6 @@
 							"description": "Returns the global transform of the camera.",
 							"nodeType": "mat4",
 							"shaderNode": "cameraWorldMatrix"
-						}
-					]
-				},
-				{
-					"name": "Material Elements",
-					"icon": "circles-filled",
-					"children": [
-						{
-							"name": "Material Alpha Test",
-							"icon": "circle-filled",
-							"description": "Return the `alphaTest` value of the Material.",
-							"nodeType": "float",
-							"shaderNode": "materialAlphaTest"
-						},
-						{
-							"name": "Material Color",
-							"icon": "circle-filled",
-							"description": "Return the `emissive * emissiveMap` value of the Material",
-							"nodeType": "color",
-							"shaderNode": "materialColor"
-						},
-						{
-							"name": "Material Emissive",
-							"icon": "circle-filled",
-							"description": "Return the `emissive * emissiveMap` value of the Material.",
-							"nodeType": "color",
-							"shaderNode": "materialEmissive"
-						},
-						{
-							"name": "Material Metalness",
-							"icon": "circle-filled",
-							"description": "Return the `metalness * metalnessMap.b` value of the Material.",
-							"nodeType": "float",
-							"shaderNode": "materialMetalness"
-						},
-						{
-							"name": "Material Normal",
-							"icon": "circle-filled",
-							"nodeType": "float",
-							"shaderNode": "materialNormal"
-						},
-						{
-							"name": "Material Opacity",
-							"icon": "circle-filled",
-							"description": "Return the `opacity * alphaMap` value of the Material.",
-							"nodeType": "float",
-							"shaderNode": "materialOpacity"
-						},
-						{
-							"name": "Material Reflectivity",
-							"icon": "circle-filled",
-							"nodeType": "float",
-							"shaderNode": "materialReflectivity"
-						},
-						{
-							"name": "Material Rotation",
-							"icon": "circle-filled",
-							"nodeType": "float",
-							"shaderNode": "materialRotation"
-						},
-						{
-							"name": "Material Roughness",
-							"icon": "circle-filled",
-							"description": "Return the `roughness * roughnessMap.g` value of the Material.",
-							"nodeType": "float",
-							"shaderNode": "materialRoughness"
-						},
-						{
-							"name": "Material Shininess",
-							"icon": "circle-filled",
-							"nodeType": "float",
-							"shaderNode": "materialShininess"
-						},
-						{
-							"name": "Material Specular Color",
-							"icon": "circle-filled",
-							"nodeType": "color",
-							"shaderNode": "materialSpecularColor"
-						},
-						{
-							"name": "Material UV",
-							"icon": "circle-filled",
-							"nodeType": "vec2",
-							"shaderNode": "materialUV"
 						}
 					]
 				},
@@ -316,7 +232,7 @@
 						{
 							"name": "Model Normal Matrix",
 							"icon": "box",
-							"nodeType": "vec3",
+							"nodeType": "mat3",
 							"shaderNode": "modelNormalMatrix"
 						},
 						{
@@ -328,7 +244,7 @@
 						{
 							"name": "Model View Matrix",
 							"icon": "box",
-							"nodeType": "vec3",
+							"nodeType": "mat4",
 							"shaderNode": "modelViewMatrix"
 						},
 						{
@@ -340,7 +256,7 @@
 						{
 							"name": "Model World Matrix",
 							"icon": "box",
-							"nodeType": "vec3",
+							"nodeType": "mat4",
 							"shaderNode": "modelWorldMatrix"
 						}
 					]
@@ -364,6 +280,7 @@
 							"name": "Object Normal Matrix",
 							"icon": "3d-cube-sphere",
 							"shaderNode": "objectNormalMatrix",
+							"nodeType": "mat3",
 							"properties": [
 								{
 									"name": "object3d",
@@ -386,6 +303,7 @@
 							"name": "Object View Matrix",
 							"icon": "3d-cube-sphere",
 							"shaderNode": "objectViewMatrix",
+							"nodeType": "mat4",
 							"properties": [
 								{
 									"name": "object3d",
@@ -506,6 +424,12 @@
 					"icon": "chart-treemap",
 					"children": [
 						{
+							"name": "UV",
+							"icon": "chart-treemap",
+							"nodeType": "vec2",
+							"editorClass": "UVEditor"
+						},
+						{
 							"name": "Matcap UV",
 							"icon": "chart-treemap",
 							"nodeType": "vec1",
@@ -516,12 +440,6 @@
 							"icon": "chart-treemap",
 							"nodeType": "vec1",
 							"shaderNode": "pointUV"
-						},
-						{
-							"name": "UV",
-							"icon": "chart-treemap",
-							"nodeType": "vec2",
-							"editorClass": "UVEditor"
 						}
 					]
 				},

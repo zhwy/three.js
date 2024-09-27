@@ -22,10 +22,6 @@
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> raycaster - texture
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -183,7 +179,6 @@
 			const onClickPosition = new THREE.Vector2();
 
 			init();
-			render();
 
 			function init() {
 
@@ -201,6 +196,7 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( width, height );
+				renderer.setAnimationLoop( animate );
 				container.appendChild( renderer.domElement );
 
 				// A cube, in the middle.
@@ -333,9 +329,7 @@
 
 			}
 
-			function render() {
-
-				requestAnimationFrame( render );
+			function animate() {
 
 				// update texture parameters
 

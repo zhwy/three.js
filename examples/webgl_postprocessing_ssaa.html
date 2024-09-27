@@ -8,14 +8,12 @@
 	</head>
 	<body>
 		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - Manual Supersamling Anti-Aliasing (SSAA) pass by <a href="https://clara.io" target="_blank" rel="noopener">Ben Houston</a>
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - Unbiased Manual Supersampling Anti-Aliasing (SSAA) pass by <a href="https://clara.io" target="_blank" rel="noopener">Ben Houston</a><br/><br/>
+			This example shows how to unbias the rounding errors accumulated using high number of SSAA samples on a 8-bit per channel buffer.<br/><br/>
+			Turn off the "unbiased" feature to see the banding that results from accumulated rounding errors.
 		</div>
 
 		<div id="container"></div>
-
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
 
 		<script type="importmap">
 			{
@@ -34,9 +32,8 @@
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 			import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-			import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 			import { SSAARenderPass } from 'three/addons/postprocessing/SSAARenderPass.js';
-			import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
+			import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 			let scene, renderer, composer;
 			let cameraP, ssaaRenderPassP;
@@ -45,6 +42,7 @@
 
 			const params = {
 				sampleLevel: 4,
+				unbiased: true,
 				camera: 'perspective',
 				clearColor: 'black',
 				clearAlpha: 1.0,
@@ -54,7 +52,6 @@
 			};
 
 			init();
-			animate();
 
 			clearGui();
 
@@ -64,6 +61,7 @@
 
 				gui = new GUI();
 
+				gui.add( params, 'unbiased' );
 				gui.add( params, 'sampleLevel', {
 					'Level 0: 1 Sample': 0,
 					'Level 1: 2 Samples': 1,
@@ -94,6 +92,7 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( devicePixelRatio );
 				renderer.setSize( width, height );
+				renderer.setAnimationLoop( animate );
 				document.body.appendChild( renderer.domElement );
 
 				stats = new Stats();
@@ -117,25 +116,25 @@
 				const group = new THREE.Group();
 				scene.add( group );
 
-				const light = new THREE.PointLight( 0xefffef, 0.8 );
-				light.position.z = 70;
-				light.position.y = - 70;
-				light.position.x = - 70;
+				const light = new THREE.PointLight( 0xefffef, 500 );
+				light.position.z = 10;
+				light.position.y = - 10;
+				light.position.x = - 10;
 				scene.add( light );
 
-				const light2 = new THREE.PointLight( 0xffefef, 0.8 );
-				light2.position.z = 70;
-				light2.position.x = - 70;
-				light2.position.y = 70;
+				const light2 = new THREE.PointLight( 0xffefef, 500 );
+				light2.position.z = 10;
+				light2.position.x = - 10;
+				light2.position.y = 10;
 				scene.add( light2 );
 
-				const light3 = new THREE.PointLight( 0xefefff, 0.8 );
-				light3.position.z = 70;
-				light3.position.x = 70;
-				light3.position.y = - 70;
+				const light3 = new THREE.PointLight( 0xefefff, 500 );
+				light3.position.z = 10;
+				light3.position.x = 10;
+				light3.position.y = - 10;
 				scene.add( light3 );
 
-				const light4 = new THREE.AmbientLight( 0xffffff, 0.05 );
+				const light4 = new THREE.AmbientLight( 0xffffff, 0.2 );
 				scene.add( light4 );
 
 				const geometry = new THREE.SphereGeometry( 3, 48, 24 );
@@ -168,7 +167,7 @@
 				composer.addPass( ssaaRenderPassP );
 				ssaaRenderPassO = new SSAARenderPass( scene, cameraO );
 				composer.addPass( ssaaRenderPassO );
-				const outputPass = new ShaderPass( GammaCorrectionShader );
+				const outputPass = new OutputPass();
 				composer.addPass( outputPass );
 
 				window.addEventListener( 'resize', onWindowResize );
@@ -182,7 +181,7 @@
 				const aspect = width / height;
 
 				cameraP.aspect = aspect;
-				cameraP.setViewOffset( width, height, params.viewOffset, 0, width, height );
+				cameraP.setViewOffset( width, height, params.viewOffsetX, 0, width, height );
 				cameraO.updateProjectionMatrix();
 
 				cameraO.left = - height * aspect;
@@ -197,8 +196,6 @@
 			}
 
 			function animate() {
-
-				requestAnimationFrame( animate );
 
 				stats.begin();
 
@@ -231,6 +228,7 @@
 				ssaaRenderPassP.clearAlpha = ssaaRenderPassO.clearAlpha = params.clearAlpha;
 
 				ssaaRenderPassP.sampleLevel = ssaaRenderPassO.sampleLevel = params.sampleLevel;
+				ssaaRenderPassP.unbiased = ssaaRenderPassO.unbiased = params.unbiased;
 
 				ssaaRenderPassP.enabled = ( params.camera === 'perspective' );
 				ssaaRenderPassO.enabled = ( params.camera === 'orthographic' );

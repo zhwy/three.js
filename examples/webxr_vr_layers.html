@@ -20,10 +20,6 @@
 
 		</div>
 
-		<!-- Import maps polyfill -->
-		<!-- Remove this when import maps will be widely supported -->
-		<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
 		<script type="importmap">
 			{
 				"imports": {
@@ -110,7 +106,6 @@
 			snellenConfig.quadHeight = .5 * snellenConfig.heightMeters / snellenConfig.cropY;
 
 			init();
-			animate();
 
 			function init() {
 
@@ -119,17 +114,18 @@
 				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 10 );
 				camera.position.set( 0, 1.6, 3 );
 
-				const hemLight = new THREE.HemisphereLight( 0x808080, 0x606060 );
-				const light = new THREE.DirectionalLight( 0xffffff );
+				const hemLight = new THREE.HemisphereLight( 0x808080, 0x606060, 3 );
+				const light = new THREE.DirectionalLight( 0xffffff, 3 );
 				scene.add( hemLight, light );
 
 				//
 
 				renderer = new THREE.WebGLRenderer( { antialias: false } );
 				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
 				renderer.setClearAlpha( 1 );
 				renderer.setClearColor( new THREE.Color( 0 ), 0 );
-				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.xr.enabled = true;
 
 				document.body.appendChild( renderer.domElement );
@@ -251,7 +247,9 @@
 
 				}
 
-				const group = new InteractiveGroup( renderer, camera );
+				const group = new InteractiveGroup();
+				group.listenToXRControllerEvents( controllers[ 0 ] );
+				group.listenToXRControllerEvents( controllers[ 1 ] );
 				scene.add( group );
 
 				guiMesh = new HTMLMesh( gui.domElement );
@@ -300,13 +298,7 @@
 			}
 			//
 
-			function animate() {
-
-				renderer.setAnimationLoop( render );
-
-			}
-
-			function render( t, frame ) {
+			function animate( t, frame ) {
 
 				const xr = renderer.xr;
 				const session = xr.getSession();

@@ -7,6 +7,8 @@
 		<link type="text/css" rel="stylesheet" href="page.css" />
 	</head>
 	<body>
+		[page:Controls] &rarr;
+
 		<h1>[name]</h1>
 
 		<p class="desc">
@@ -66,7 +68,7 @@
 		<p>
 			[page:Camera object]: (required) The camera to be controlled. The camera must not be a child of another object, unless that object is the scene itself.<br><br>
 
-			[page:HTMLDOMElement domElement]: The HTML element used for event listeners.
+			[page:HTMLDOMElement domElement]: The HTML element used for event listeners. (optional)
 		</p>
 
 		<h2>Events</h2>
@@ -88,10 +90,12 @@
 
 		<h2>Properties</h2>
 
+		<p>See the base [page:Controls] class for common properties.</p>
+
 		<h3>[property:Boolean autoRotate]</h3>
 		<p>
 			Set to true to automatically rotate around the target.<br> Note that if this is enabled, you must call [page:.update]
-			() in your animation loop.
+			() in your animation loop. If you want the auto-rotate speed to be independent of the frame rate (the refresh rate of the display), you must pass the time `deltaTime`, in seconds, to [page:.update]().
 		</p>
 
 		<h3>[property:Float autoRotateSpeed]</h3>
@@ -106,17 +110,6 @@
 		<p>
 			The damping inertia used if [page:.enableDamping] is set to `true`. Default is `0.05`.<br> Note that for this to work, you must
 			call [page:.update] () in your animation loop.
-		</p>
-
-		<h3>[property:HTMLDOMElement domElement]</h3>
-		<p>
-			The HTMLDOMElement used to listen for mouse / touch events. This must be passed in the constructor; changing it here will
-			not set up new event listeners.
-		</p>
-
-		<h3>[property:Boolean enabled]</h3>
-		<p>
-			When set to `false`, the controls will not respond to user input. Default is `true`.
 		</p>
 
 		<h3>[property:Boolean enableDamping]</h3>
@@ -181,6 +174,16 @@ controls.keys = {
 			How far you can zoom out ( [page:OrthographicCamera] only ). Default is Infinity.
 		</p>
 
+		<h3>[property:Float minTargetRadius]</h3>
+		<p>
+			How close you can get the target to the 3D [page:.cursor]. Default is 0.
+		</p>
+
+		<h3>[property:Float maxTargetRadius]</h3>
+		<p>
+			How far you can move the target from the 3D [page:.cursor]. Default is Infinity.
+		</p>
+
 		<h3>[property:Float minAzimuthAngle]</h3>
 		<p>
 			How far you can orbit horizontally, lower limit. If set, the interval [ min, max ] must be a sub-interval of [ - 2 PI, 2 PI ], with ( max - min < 2 PI ). Default is Infinity.
@@ -212,11 +215,6 @@ controls.mouseButtons = {
 	RIGHT: THREE.MOUSE.PAN
 }
 			</code>
-		</p>
-
-		<h3>[property:Camera object]</h3>
-		<p>
-			The camera being controlled.
 		</p>
 
 		<h3>[property:Float panSpeed]</h3>
@@ -252,6 +250,11 @@ controls.mouseButtons = {
 			the focus of the controls.
 		</p>
 
+		<h3>[property:Vector3 cursor]</h3>
+		<p>
+			The focus point of the [page:.minTargetRadius] and [page:.maxTargetRadius] limits. It can be updated manually at any point to change the center of interest for the [page:.target].
+		</p>
+
 		<h3>[property:Object touches]</h3>
 		<p>
 			This object contains references to the touch actions used by the controls.
@@ -273,14 +276,14 @@ controls.touches = {
 			Speed of zooming / dollying. Default is 1.
 		</p>
 
-
+		<h3>[property:Boolean zoomToCursor]</h3>
+		<p>
+		Setting this property to `true` allows to zoom to the cursor's position. Default is `false`.
+		</p>
 
 		<h2>Methods</h2>
 
-		<h3>[method:undefined dispose] ()</h3>
-		<p>
-			Remove all the event listeners.
-		</p>
+		<p>See the base [page:Controls] class for common methods.</p>
 
 		<h3>[method:radians getAzimuthalAngle] ()</h3>
 		<p>
@@ -317,10 +320,11 @@ controls.touches = {
 			Removes the key event listener previously defined with [page:.listenToKeyEvents]().
 		</p>
 
-		<h3>[method:Boolean update] ()</h3>
+		<h3>[method:Boolean update] ( [param:Number deltaTime] )</h3>
 		<p>
 			Update the controls. Must be called after any manual changes to the camera's transform,
-			or in the update loop if [page:.autoRotate] or [page:.enableDamping] are set.
+			or in the update loop if [page:.autoRotate] or [page:.enableDamping] are set. `deltaTime`, in seconds, is optional,
+			and is only required if you want the auto-rotate speed to be independent of the frame rate (the refresh rate of the display).
 		</p>
 
 		<h2>Source</h2>
