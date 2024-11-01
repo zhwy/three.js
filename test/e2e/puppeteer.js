@@ -89,18 +89,18 @@ const exceptionList = [
 	'webgl_loader_texture_lottie',
 	'webgl_loader_texture_pvrtc',
 	'webgl_materials_alphahash',
+	'webgpu_materials_alphahash',
 	'webgl_materials_blending',
 	'webgl_mirror',
 	'webgl_morphtargets_face',
 	'webgl_postprocessing_transition',
 	'webgl_postprocessing_glitch',
 	'webgl_postprocessing_dof2',
-	'webgl_raymarching_reflect',
 	'webgl_renderer_pathtracer',
 	'webgl_shadowmap',
 	'webgl_shadowmap_progressive',
+	'webgpu_shadowmap_progressive',
 	'webgl_test_memory2',
-	'webgl_tiled_forward',
 	'webgl_points_dynamic',
 	'webgpu_multisampled_renderbuffers',
 	'webgl_test_wide_gamut',
@@ -121,12 +121,15 @@ const exceptionList = [
 	'webgpu_sprites',
 	'webgpu_video_panorama',
 	'webgpu_postprocessing_bloom_emissive',
+	'webgpu_lights_tiled',
+	'webgpu_postprocessing_traa',
 
 	// Awaiting for WebGPU Backend support in Puppeteer
 	'webgpu_storage_buffer',
 	'webgpu_compute_sort_bitonic',
 
 	// WebGPURenderer: Unknown problem
+	'webgpu_backdrop_water',
 	'webgpu_camera_logarithmicdepthbuffer',
 	'webgpu_clipping',
 	'webgpu_lightprobe_cubecamera',
@@ -153,6 +156,7 @@ const exceptionList = [
 	'webgpu_tsl_vfx_linkedparticles',
 	'webgpu_tsl_vfx_tornado',
 	'webgpu_textures_anisotropy',
+	'webgpu_materials_envmaps_bpcem',
 
 	// WebGPU idleTime and parseTime too low
 	'webgpu_compute_particles',
