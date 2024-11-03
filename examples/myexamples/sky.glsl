@@ -105,7 +105,7 @@ mat3 setCamera(vec3 ro, vec3 ta, float cr) {
   return mat3(cu, cv, cw);
 }
 
-const vec3 cameraPos = vec3(0.0, 0.0, 0.0);
+// const vec3 cameraPos = vec3(0.0, 0.0, 1.0);
 
 // constants for atmospheric scattering
 const float pi = 3.141592653589793238462643383279502884197169;
@@ -138,27 +138,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec2 p = (2.0 * fragCoord.xy - u_resolution.xy) / u_resolution.yy;
 	// vec2 mo = vec2(0.0);
 
-  vec3 ro = vec3(0.0, 0.0, -2.0);
+  vec3 ro = vec3(0.0, 0.0, 1.0);
+  // vec3 ro = cameraPosition;
 
-	// // Rotate the camera
-	// vec3 target = vec3(ro.x + 10., 1.0 + mo.y * 3.0, ro.z);
-
-	// vec2 cossin = vec2(cos(mo.x), sin(mo.x));
-	// mat3 rot = mat3(cossin.x, 0.0, -cossin.y, 0.0, 1.0, 0.0, cossin.y, 0.0, cossin.x);
-	// target = rot * (target - ro) + ro;
-
-  vec3 target = vWorldPosition;
-	// Compute the ray
-  vec3 rd = setCamera(ro, target, 0.0) * normalize(vec3(p.xy, 1.5));
+	// Compute the ray direction
+  vec3 rd = setCamera(ro, vWorldPosition, 0.0) * normalize(vec3(p.xy, 1.5));
 
   float dist = planeIntersect(ro, rd, MIN_HEIGHT);
 
   float sun = clamp(dot(vSunDirection, rd), 0.0, 1.0);
 	// ground color and sky color
   // vec3 col = mix(vec3(0.5, 0.5, 0.5), vec3(0.03, 0.1, 0.94), p.y * 0.5 + 0.5);
-	// vec3 col = mix(vec3(0.5, 0.5, 0.5), vec3(0.,0.,1.), p.y * 0.5 + 0.5);
-  vec3 col = vec3(0.03, 0.1, 0.94);
-  // vec3 col = vec3(0, 0, 1);
+	vec3 col = mix(vec3(0.5, 0.5, 0.5), vec3(0.,0.,1.), p.y * 0.5 + 0.5);
+  // vec3 col = vec3(0.03, 0.1, 0.94);
 	// sun color
 	// col += 0.5 * vec3(1.0, 1., 0.8) * pow(sun, 8.0);
 
@@ -166,7 +158,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     col = raymarching(ro, rd, dist, col);
   }
 
-  vec3 direction = normalize(vWorldPosition - cameraPos);
+  // 下面是ThreeJs Sky.js的atmospheric scattering部分
+
+  vec3 direction = normalize(vWorldPosition - ro);
 
 	// optical length
 	// cutoff angle at 90 to avoid singularity in next formula.
@@ -200,14 +194,13 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float sundisk = smoothstep(sunAngularDiameterCos, sunAngularDiameterCos + 0.00002, cosTheta);
   L0 += (vSunE * 19000.0 * Fex) * sundisk;
 
-	// vec3 texColor = ( Lin + L0 ) * 0.04 + vec3( 0.0, 0.0003, 0.00075 );
-  vec3 texColor = (Lin + L0) * 0.04 + col;
+  // vec3 texColor = (Lin + L0) * 0.04 + vec3(0.0, 0.0003, 0.00075);
+  vec3 texColor = (Lin + L0) * 0.04 + col; // 改为加入云层颜色
 
-  // vec3 retColor = pow(texColor, vec3(1.0 / (1.2 + (1.2 * vSunfade))));
   vec3 retColor = pow(texColor, vec3(1.0 / (1.2 + (1.2 * vSunfade))));
 
-  fragColor = vec4(retColor, 1.0);
-  // fragColor = vec4(texColor, 1.);
+  // fragColor = vec4(retColor, 1.0);
+  fragColor = vec4(texColor, 1.);
   // fragColor = vec4( col, 1.0 );
 
 }

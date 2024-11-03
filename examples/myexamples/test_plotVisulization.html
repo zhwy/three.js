@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js test - 地块可视化</title>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+		/>
+		<link type="text/css" rel="stylesheet" href="../main.css" />
+		<style>
+			html,
+			body {
+				margin: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+			}
+			canvas {
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+	</head>
+
+	<body>
+		<canvas id="container"></canvas>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../../build/three.module.js"
+				}
+			}
+		</script>
+
+		<script type="module">
+			import * as THREE from "three";
+
+			import { GUI } from "../jsm/libs/lil-gui.module.min.js";
+			import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+			import {
+				CSS2DRenderer,
+				CSS2DObject,
+			} from "../jsm/renderers/CSS2DRenderer.js";
+			import { Water } from "../jsm/objects/Water2.js";
+			import SkyShader from "./sky.glsl.js";
+
+			const feature = {
+				type: "Feature",
+				geometry: {
+					type: "Polygon",
+					coordinates: [
+						[
+							[125.25444030761719, 48.31785052727855],
+							[125.25581359863281, 48.311143514162126],
+							[125.26104927062988, 48.31157164772412],
+							[125.27057647705078, 48.31091517479365],
+							[125.28126239776611, 48.3099732640984],
+							[125.2842664718628, 48.30965929000314],
+							[125.28769969940186, 48.30894570532965],
+							[125.28881549835205, 48.30894570532965],
+							[125.2955961227417, 48.308203566684426],
+							[125.30177593231201, 48.307461417246856],
+							[125.30756950378418, 48.30683343621624],
+							[125.30821323394775, 48.30666216732138],
+							[125.30907154083252, 48.30677634664846],
+							[125.30932903289795, 48.30674780184063],
+							[125.3097152709961, 48.30629108274411],
+							[125.3104019165039, 48.30606272166321],
+							[125.31962871551514, 48.30532054109355],
+							[125.32267570495605, 48.304892355086395],
+							[125.32314777374268, 48.304093064928594],
+							[125.32537937164307, 48.303493589096064],
+							[125.32915592193604, 48.30263718283612],
+							[125.33044338226318, 48.29724149298414],
+							[125.331130027771, 48.29687033991499],
+							[125.33160209655762, 48.29675613842781],
+							[125.33203125, 48.296813239203345],
+							[125.33344745635986, 48.297041641666794],
+							[125.33546447753906, 48.297270043108455],
+							[125.33546447753906, 48.26214132213772],
+							[125.33507823944092, 48.26208418259455],
+							[125.33464908599854, 48.26196990331658],
+							[125.33284664154053, 48.26191276358179],
+							[125.33203125, 48.26196990331658],
+							[125.33125877380371, 48.26202704298751],
+							[125.33005714416504, 48.262227031332685],
+							[125.32606601715088, 48.26359835890773],
+							[125.32473564147949, 48.264426851489475],
+							[125.32267570495605, 48.26648374052982],
+							[125.31975746154785, 48.26862624525813],
+							[125.31602382659912, 48.27105430870387],
+							[125.31336307525635, 48.27233970735267],
+							[125.31164646148682, 48.27293954899005],
+							[125.30967235565186, 48.27356794696237],
+							[125.30735492706299, 48.27371076360558],
+							[125.3060245513916, 48.27391070623543],
+							[125.30516624450684, 48.27382501663271],
+							[125.30306339263916, 48.27416777418131],
+							[125.30396461486816, 48.269683181172496],
+							[125.30276298522949, 48.269540353272276],
+							[125.30284881591797, 48.26902616952623],
+							[125.30276298522949, 48.267369320040814],
+							[125.30319213867188, 48.265112490367045],
+							[125.30194759368896, 48.265055354145204],
+							[125.30263423919678, 48.26196990331658],
+							[125.3025484085083, 48.26188419369046],
+							[125.29276371002197, 48.261484213535],
+							[125.29194831848145, 48.2649982178595],
+							[125.28216361999512, 48.26405545992384],
+							[125.28109073638916, 48.263826909926735],
+							[125.27980327606201, 48.26385547873227],
+							[125.27761459350586, 48.26362692784099],
+							[125.27804374694824, 48.26079852598707],
+							[125.27748584747314, 48.25908426687758],
+							[125.27602672576904, 48.25799853970881],
+							[125.27426719665527, 48.25696993480551],
+							[125.27358055114746, 48.25611274824405],
+							[125.27109146118164, 48.25374112387354],
+							[125.26916027069092, 48.253426803954255],
+							[125.26890277862549, 48.25351252776022],
+							[125.26855945587158, 48.25539841513128],
+							[125.26774406433105, 48.25411259037796],
+							[125.26705741882324, 48.25482694145526],
+							[125.26598453521729, 48.256855644094315],
+							[125.26559829711914, 48.25776996262988],
+							[125.26495456695557, 48.25851283439988],
+							[125.26448249816895, 48.259998545556385],
+							[125.26396751403809, 48.26025568348868],
+							[125.26379585266113, 48.26154135374884],
+							[125.26083469390869, 48.261312792510296],
+							[125.26177883148193, 48.25611274824405],
+							[125.25787353515625, 48.255855589473185],
+							[125.25461196899414, 48.272054066002795],
+							[125.25465488433838, 48.27219688687731],
+							[125.25722980499268, 48.27248252742882],
+							[125.25735855102539, 48.27256821928293],
+							[125.25705814361572, 48.27371076360558],
+							[125.25701522827148, 48.27525315791624],
+							[125.25671482086182, 48.27599577560807],
+							[125.25675773620605, 48.276252833063495],
+							[125.25671482086182, 48.27676694409436],
+							[125.25632858276367, 48.27750953978352],
+							[125.25637149810791, 48.277680906486665],
+							[125.25628566741943, 48.27805219903817],
+							[125.25628566741943, 48.27853773138011],
+							[125.26426792144775, 48.27962302228252],
+							[125.2589464187622, 48.2833071273065],
+							[125.25534152984619, 48.28570593657716],
+							[125.25383949279785, 48.28699096662933],
+							[125.25049209594727, 48.289646592947435],
+							[125.24662971496582, 48.29073164783196],
+							[125.24452686309814, 48.29067454025491],
+							[125.2430248260498, 48.29053177103293],
+							[125.24255275726318, 48.29036044743967],
+							[125.23435592651367, 48.2969274405628],
+							[125.2300214767456, 48.30029626574557],
+							[125.2291202545166, 48.30546326896436],
+							[125.22920608520508, 48.30603417645622],
+							[125.22894859313965, 48.306919070448146],
+							[125.22894859313965, 48.307233061402485],
+							[125.22903442382812, 48.30754705042506],
+							[125.22890567779541, 48.30788958170103],
+							[125.22899150848389, 48.30808939055032],
+							[125.23143768310547, 48.3084319181863],
+							[125.23019313812256, 48.31565300732768],
+							[125.23392677307129, 48.315995484195554],
+							[125.24740219116211, 48.317365368678054],
+							[125.25444030761719, 48.31785052727855],
+						],
+					],
+				},
+			};
+
+			let scene, camera, renderer, labelRenderer, light, sky;
+
+			const textureLoader = new THREE.TextureLoader();
+
+			init();
+			requestAnimationFrame(animate);
+
+			function init() {
+				// scene
+
+				scene = new THREE.Scene();
+
+				// camera
+
+				camera = new THREE.PerspectiveCamera(
+					60,
+					window.innerWidth / window.innerHeight,
+					0.1,
+					200
+				);
+				camera.position.set(0, 0.7, 1);
+				camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+				// renderer
+
+				renderer = new THREE.WebGLRenderer({
+					antialias: true,
+					canvas: document.getElementById("container"),
+				});
+				renderer.setSize(
+					renderer.domElement.clientWidth,
+					renderer.domElement.clientHeight
+				);
+				renderer.setPixelRatio(window.devicePixelRatio);
+
+				// skybox
+
+				// const cubeTextureLoader = new THREE.CubeTextureLoader();
+				// cubeTextureLoader.setPath("../textures/cube/Park2/");
+
+				// const cubeTexture = cubeTextureLoader.load([
+				// 	"posx.jpg",
+				// 	"negx.jpg",
+				// 	"posy.jpg",
+				// 	"negy.jpg",
+				// 	"posz.jpg",
+				// 	"negz.jpg",
+				// ]);
+
+				// scene.background = cubeTexture;
+
+				// sky
+
+				initSky();
+
+				// light
+
+				const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+				scene.add(ambientLight);
+
+				const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+				directionalLight.position.copy(camera.position);
+				scene.add(directionalLight);
+				light = directionalLight;
+
+				const pointLight = new THREE.PointLight(0xffffff, 2, 1);
+				pointLight.position.set(0, 0.8, 0);
+				scene.add(pointLight);
+
+				// label
+
+				labelRenderer = new CSS2DRenderer();
+				labelRenderer.setSize(
+					renderer.domElement.clientWidth,
+					renderer.domElement.clientHeight
+				);
+				labelRenderer.domElement.style.position = "absolute";
+				labelRenderer.domElement.style.top = "0px";
+				renderer.domElement.parentElement.appendChild(labelRenderer.domElement);
+
+				// control
+
+				const controls = new OrbitControls(camera, labelRenderer.domElement);
+				controls.minDistance = 0.1;
+				controls.maxDistance = 50;
+
+				// mesh
+
+				textureLoader.load("corn.jpg", (texture) => {
+					texture.wrapS = THREE.RepeatWrapping;
+					texture.wrapT = THREE.RepeatWrapping;
+
+					const geometry = createGeometry(feature);
+					const colorMaterial = new THREE.MeshStandardMaterial({
+						color: 0xa7a264,
+						side: THREE.DoubleSide,
+					});
+					const textureMaterial = new THREE.MeshStandardMaterial({
+						map: texture,
+						side: THREE.DoubleSide,
+					});
+
+					const mesh = new THREE.Mesh(geometry, [
+						textureMaterial,
+						colorMaterial,
+					]);
+
+					const element = document.createElement("div");
+					element.style.color = "white";
+					element.style.fontSize = "12px";
+					element.style.fontWeight = "bold";
+					element.style.textShadow = "1px 1px 1px black";
+					element.innerHTML = "地块";
+					const label = new CSS2DObject(element);
+					label.position.set(0, 0.1, 0);
+
+					mesh.add(label);
+
+					scene.add(mesh);
+				});
+
+				// resize
+
+				window.addEventListener("resize", onWindowResize);
+			}
+
+			function onWindowResize() {
+				const width = renderer.domElement.parentElement.clientWidth;
+				const height = renderer.domElement.parentElement.clientHeight;
+
+				camera.aspect = width / height;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(width, height);
+				labelRenderer.setSize(width, height);
+
+				sky.material.uniforms.u_resolution.value.set(width, height);
+			}
+
+			function animate(t) {
+				requestAnimationFrame(animate);
+
+				render(t);
+			}
+
+			function render(now) {
+				now *= 0.001;
+
+				if (sky) {
+					sky.material.uniforms.u_time.value = now;
+				}
+
+				light.position.copy(camera.position);
+
+				renderer.render(scene, camera);
+				labelRenderer.render(scene, camera);
+			}
+
+			function getMercator(lng, lat) {
+				const mercator = {};
+				const earthRad = 6378137.0;
+				mercator.x = ((lng * Math.PI) / 180) * earthRad;
+				const a = (lat * Math.PI) / 180;
+				mercator.y =
+					(earthRad / 2) * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)));
+				return mercator;
+			}
+
+			function createGeometry(feature) {
+				const coordinates = feature.geometry.coordinates[0];
+				const mercs = coordinates.map((coord) =>
+					getMercator(coord[0], coord[1])
+				);
+
+				const shape = new THREE.Shape();
+				shape.moveTo(mercs[0].x, mercs[0].y);
+				for (let i = 1; i < mercs.length; i += 1) {
+					shape.lineTo(mercs[i].x, mercs[i].y);
+				}
+
+				const geometry = new THREE.ExtrudeGeometry(shape, {
+					depth: 0.05,
+					bevelEnabled: false,
+				});
+				geometry.computeBoundingBox();
+				const maxLength = Math.max(
+					geometry.boundingBox.max.x - geometry.boundingBox.min.x,
+					geometry.boundingBox.max.y - geometry.boundingBox.min.y
+				);
+				geometry.translate(
+					-geometry.boundingBox.min.x,
+					-geometry.boundingBox.min.y,
+					0
+				);
+				geometry.scale(1 / maxLength, 1 / maxLength, 1);
+
+				// 更改uv
+				const { uv, position, normal } = geometry.attributes;
+				for (let i = 0; i < uv.count; i += 1) {
+					if (normal.getZ(i) === 1) {
+						const x = position.getX(i);
+						const y = position.getY(i);
+						uv.setXY(i, x, y);
+					} else {
+						uv.setXY(i, 0, 0);
+					}
+				}
+
+				geometry.translate(
+					-geometry.boundingBox.max.x / 2,
+					-geometry.boundingBox.max.y / 2,
+					0
+				);
+
+				geometry.rotateX(-Math.PI / 2);
+
+				return geometry;
+			}
+
+			function initSky() {
+				const noise = textureLoader.load("../textures/noise.png");
+				noise.wrapS = THREE.RepeatWrapping;
+				noise.wrapT = THREE.RepeatWrapping;
+				const params = {
+					uniforms: {
+						u_time: { value: 0 },
+						u_resolution: {
+							value: new THREE.Vector2(
+								renderer.domElement.clientWidth,
+								renderer.domElement.clientHeight
+							),
+						},
+						u_noise: {
+							value: noise,
+						},
+						u_sunPosition: {
+							value: new THREE.Vector3(0, 1, 1),
+						},
+						u_skyColor: {
+							value: new THREE.Color(0x0255c3),
+						},
+						u_groundColor: {
+							value: new THREE.Color(0x777777),
+						},
+					},
+					vertexShader: SkyShader.vert,
+					fragmentShader: SkyShader.frag,
+					depthTest: false,
+				};
+
+				const skyGeom = new THREE.PlaneGeometry(2, 2);
+				const skyMat = new THREE.ShaderMaterial(params);
+
+				sky = new THREE.Mesh(skyGeom, skyMat);
+				scene.add(sky);
+			}
+		</script>
+	</body>
+</html>
