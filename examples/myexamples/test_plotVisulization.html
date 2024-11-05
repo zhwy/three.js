@@ -38,11 +38,11 @@
 
 			import { GUI } from "../jsm/libs/lil-gui.module.min.js";
 			import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+			import { GLTFLoader } from "../jsm/loaders/GLTFLoader.js";
 			import {
 				CSS2DRenderer,
 				CSS2DObject,
 			} from "../jsm/renderers/CSS2DRenderer.js";
-			import { Water } from "../jsm/objects/Water2.js";
 			import SkyShader from "./sky.glsl.js";
 
 			const feature = {
@@ -172,7 +172,7 @@
 				},
 			};
 
-			let scene, camera, renderer, labelRenderer, light, sky;
+			let scene, camera, renderer, labelRenderer, light, sky, mesh;
 
 			const textureLoader = new THREE.TextureLoader();
 
@@ -274,10 +274,10 @@
 						side: THREE.DoubleSide,
 					});
 
-					const mesh = new THREE.Mesh(geometry, [
-						textureMaterial,
-						colorMaterial,
-					]);
+					mesh = new THREE.Mesh(geometry, [textureMaterial, colorMaterial]);
+					mesh.receiveShadow = true;
+
+					loadModel("./corn.glb", geometry.boundingBox);
 
 					const element = document.createElement("div");
 					element.style.color = "white";
@@ -341,15 +341,46 @@
 			}
 
 			function createGeometry(feature) {
-				const coordinates = feature.geometry.coordinates[0];
-				const mercs = coordinates.map((coord) =>
-					getMercator(coord[0], coord[1])
-				);
+				const processSinglePolygon = (coordinates) => {
+					const mercs = coordinates[0].map((coord) =>
+						getMercator(coord[0], coord[1])
+					);
 
-				const shape = new THREE.Shape();
-				shape.moveTo(mercs[0].x, mercs[0].y);
-				for (let i = 1; i < mercs.length; i += 1) {
-					shape.lineTo(mercs[i].x, mercs[i].y);
+					const shape = new THREE.Shape();
+					shape.moveTo(mercs[0].x, mercs[0].y);
+					for (let i = 1; i < mercs.length; i += 1) {
+						shape.lineTo(mercs[i].x, mercs[i].y);
+					}
+
+					// 挖洞
+					const holes = coordinates.slice(1).map((coords) => {
+						const path = new Path();
+						const mercs = coords.map((coord) =>
+							getMercator(coord[0], coord[1])
+						);
+						path.moveTo(mercs[0].x, mercs[0].y);
+						for (let i = 1; i < mercs.length; i += 1) {
+							path.lineTo(mercs[i].x, mercs[i].y);
+						}
+
+						return path;
+					});
+
+					shape.holes.push(...holes);
+
+					return shape;
+				};
+
+				let shape;
+
+				if (feature.geometry.type === "Polygon") {
+					shape = processSinglePolygon(feature.geometry.coordinates);
+				} else if (feature.geometry.type === "MultiPolygon") {
+					shape = feature.geometry.coordinates.map((coords) =>
+						processSinglePolygon(coords)
+					);
+				} else {
+					throw new Error(`暂不支持几何类型是${feature.geometry.type}的地块`);
 				}
 
 				const geometry = new THREE.ExtrudeGeometry(shape, {
@@ -427,6 +458,63 @@
 
 				sky = new THREE.Mesh(skyGeom, skyMat);
 				scene.add(sky);
+			}
+
+			function loadModel(modelUrl, bounding) {
+				const { min, max } = bounding;
+				const datas = [];
+				const rayCaster = new THREE.Raycaster();
+				for (let i = min.x + 0.1; i <= max.x - 0.1; i += 0.1) {
+					for (let j = min.z + 0.1; j <= max.z - 0.1; j += 0.1) {
+						rayCaster.set(
+							new THREE.Vector3(i, 0.5, j),
+							new THREE.Vector3(0, -1, 0)
+						);
+						const test = rayCaster.intersectObject(mesh, false);
+						if (test.length) {
+							datas.push({
+								position: new THREE.Vector3(i, 0.05, j),
+								rotation: new THREE.Euler(0, Math.random() * Math.PI, 0),
+								scale: new THREE.Vector3(1, 1, 1),
+							});
+						}
+					}
+				}
+
+				const loader = new GLTFLoader();
+				loader.load(modelUrl, (gltf) => {
+					const group = new THREE.Object3D();
+					group.name = "isntanced-model";
+					scene.add(group);
+
+					gltf.scene.traverse((node) => {
+						if (node.isMesh) {
+							// const defaultTransform = new THREE.Matrix4().makeRotationX(
+							//   -Math.PI / 2,
+							// );
+							// node.geometry.applyMatrix4(defaultTransform);
+							const model = new THREE.InstancedMesh(
+								node.geometry,
+								node.material,
+								datas.length
+							);
+
+							// model.castShadow = true;
+							// model.receiveShadow = true;
+
+							const dummy = new THREE.Object3D();
+							datas.forEach((data, i) => {
+								dummy.position.copy(data.position);
+								dummy.rotation.copy(data.rotation);
+								dummy.scale.copy(data.scale);
+								dummy.updateMatrix();
+								model.setMatrixAt(i, dummy.matrix);
+							});
+
+							group.add(model);
+						}
+					});
+				});
 			}
 		</script>
 	</body>
