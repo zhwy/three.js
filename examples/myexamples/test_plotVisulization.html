@@ -43,7 +43,7 @@
 				CSS2DRenderer,
 				CSS2DObject,
 			} from "../jsm/renderers/CSS2DRenderer.js";
-			import SkyShader from "./sky.glsl.js";
+			import SkyShader from "./test_plotVisulization/sky.glsl.js";
 
 			const feature = {
 				type: "Feature",
@@ -260,7 +260,7 @@
 
 				// mesh
 
-				textureLoader.load("corn.jpg", (texture) => {
+				textureLoader.load("./test_plotVisulization/corn.jpg", (texture) => {
 					texture.wrapS = THREE.RepeatWrapping;
 					texture.wrapT = THREE.RepeatWrapping;
 
@@ -277,7 +277,7 @@
 					mesh = new THREE.Mesh(geometry, [textureMaterial, colorMaterial]);
 					mesh.receiveShadow = true;
 
-					loadModel("./corn.glb", geometry.boundingBox);
+					loadModel("./test_plotVisulization/corn.glb", geometry.boundingBox);
 
 					const element = document.createElement("div");
 					element.style.color = "white";

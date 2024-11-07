@@ -68,7 +68,7 @@
 
 				// 读取模型
 
-				const loader = new GLTFLoader().setPath("../models/gltf/Tube/");
+				const loader = new GLTFLoader().setPath("./test_dynamicTube/");
 				const models = ["loose.glb"];
 
 				const basicMaterial = new THREE.MeshBasicMaterial({
@@ -85,7 +85,7 @@
 								const tube = new Tube(
 									child.geometry.attributes.position.array,
 									{
-										image: "../textures/arrow.png",
+										image: "./test_dynamicTube/arrow.png",
 										repeatx: 50,
 										repeaty: 2,
 										radius: 0.1,

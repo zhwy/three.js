@@ -1,5 +1,5 @@
-import * as THREE from '../../build/three.module.js';
-import { CSS2DObject } from '../jsm/renderers/CSS2DRenderer.js';
+import * as THREE from '../../../build/three.module.js';
+import { CSS2DObject } from '../../jsm/renderers/CSS2DRenderer.js';
 export var MeasureMode;
 (function (MeasureMode) {
     MeasureMode["Distance"] = "Distance";
